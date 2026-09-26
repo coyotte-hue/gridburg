@@ -18,6 +18,10 @@ import { T_DOCKS, DOCK_JOBS, T_GAS, T_HYDRO, T_NUCLEAR } from '../constants';
 import { COST_MOTORWAY, COST_RAMP, COST_HIGHWAY2 } from '../constants';
 import { COST_AVENUE, COST_LANE, COST_HIGHWAY, COST_LIGHT, COST_STOP, COST_CALM, COST_ROAD, COST_ROUNDABOUT, COST_ZONE, SERVICES, T_COAL, T_OUTLET, T_PUMP, T_TOWER, T_WIND, T_SOLAR } from '../constants';
 import { icon } from './icons';
+import { getLang, t, serviceName, civicLabel, fundingLabel, policyText, milestoneName, milestoneUnlocks, taxLabel } from '../i18n';
+
+/** Local shorthand for tool strings: French when the UI language is French, English otherwise. */
+const L = (en: string, fr: string): string => getLang() === 'fr' ? fr : en;
 
 /** One line of city trouble, with an id the game can turn into a place to look. */
 export interface CityMessage { id: string; text: string }
@@ -58,128 +62,132 @@ const money = (n: number): string => `$${n.toLocaleString()}`;
 const svc = (k: number): string => money(SERVICES[k].cost);
 
 // Laid out like the Cities: Skylines build menu: pick a category, then a tool from its panel.
-const CATEGORIES: Category[] = [
+// Built once per UI language (changing language reloads the page, so one build is enough).
+function buildCategories(): Category[] {
+  return [
   {
-    id: 'roads', label: 'Roads',
+    id: 'roads', label: t('cat.roads'),
     tools: [
-      { id: 'lane', label: 'Lane', key: 'L', price: `${money(COST_LANE)} / cell`, note: 'One shared lane', hint: 'A narrow, cheap, slow street for the inside of a block. Traffic shares a single carriageway, so keep it away from through routes' },
-      { id: 'road', label: 'Road', key: 'R', price: `${money(COST_ROAD)} / cell`, note: 'Two lanes', hint: 'Click to start, click again to finish. It keeps going from the last point until you join a road, right-click, or press Esc' },
-      { id: 'avenue', label: 'Avenue', key: 'V', price: `${money(COST_AVENUE)} / cell`, note: 'Four lanes, faster', hint: 'A wide, fast road that holds far more traffic. Placed the same way as a road' },
-      { id: 'highway', label: 'Expressway', key: 'X', price: `${money(COST_HIGHWAY)} / cell`, note: 'Fastest · no frontage', hint: 'Six lanes at expressway speed for crossing the city. Nothing can be zoned or built along it, so feed it with ordinary streets' },
-      { id: 'motorway', label: 'One-way highway', price: `${money(COST_MOTORWAY)} / cell`, note: '3 lanes · one way', hint: 'One carriageway of a motorway, three lanes in the direction you draw it. Draw the other direction as a second road beside it, as in Cities: Skylines 2. No frontage' },
-      { id: 'highway2', label: 'Two-lane highway', price: `${money(COST_HIGHWAY2)} / cell`, note: '2 lanes · one way', hint: 'A smaller one-way highway, two lanes in the direction you draw it. Pair two of them for a regional road; slip roads join it the same way as the motorway' },
-      { id: 'ramp', label: 'Highway ramp', price: `${money(COST_RAMP)} / cell`, note: '1 lane · one way', hint: 'A slip road on or off a highway, one way in the direction you draw it. Start it from a highway to make an exit, end it on one to make an on-ramp; press + for a flyover or − to dive under' },
-      { id: 'entry', label: 'City entrance', price: money(COST_ENTRY), note: 'New highway access', hint: 'Choose a clear map edge. Adds a seven-cell avenue connecting to the outside world. Unlocks at Small town' },
-      { id: 'bikelane', label: 'Bike lanes', price: '$12 / cell', note: 'Upgrade a street', hint: 'Click a surface street or avenue to add compact bike lanes beside its curbs. Click again to remove. Not available on highways, narrow lanes, bridges or roundabouts' },
-      { id: 'upgrade', label: 'Upgrade', key: 'U', price: 'Difference', note: 'Widen one step', hint: 'Click a road to widen it one step: lane, street, avenue, expressway, then back to a lane. Drag along a road to change just that stretch. Widening costs the difference; narrowing is free' },
-      { id: 'edit', label: 'Edit roads', key: 'N', price: 'Extra length', note: 'Drag points and bends', hint: 'Drag a junction or road end to move it: the roads follow, keep their curves, and join whatever they cross. Drag the middle of a road to bend it. You pay only for road you add' },
-      { id: 'addlane', label: 'Add lane', price: 'Per lane', note: 'Widen one side', hint: 'Drag along one side of a road to add a lane there for that stretch; it tapers in and out, and one that ends at a junction becomes a turn pocket. Click for the whole road. Hold Shift to take a lane away, which is free. Cars pick their lane for the turn ahead and change lanes to get by' },
-      { id: 'cut', label: 'Cut', key: 'Z', price: 'Free', note: 'Remove a road or a stretch', hint: 'Click a road to remove it up to the next junctions, or drag along it to cut out just that stretch. Bridges and tunnels come out whole' },
+      { id: 'lane', label: L('Lane', 'Ruelle'), key: 'L', price: `${money(COST_LANE)}${L(' / cell', ' / case')}`, note: L('One shared lane', 'Une voie partagée'), hint: L('A narrow, cheap, slow street for the inside of a block. Traffic shares a single carriageway, so keep it away from through routes', 'Une rue étroite, bon marché et lente pour l’intérieur des îlots. Une seule chaussée partagée : à réserver aux voies secondaires') },
+      { id: 'road', label: L('Road', 'Rue'), key: 'R', price: `${money(COST_ROAD)}${L(' / cell', ' / case')}`, note: L('Two lanes', 'Deux voies'), hint: L('Click to start, click again to finish. It keeps going from the last point until you join a road, right-click, or press Esc', 'Cliquez pour commencer, recliquez pour finir. Continue depuis le dernier point jusqu’à rejoindre une route, clic droit ou Échap') },
+      { id: 'avenue', label: L('Avenue', 'Avenue'), key: 'V', price: `${money(COST_AVENUE)}${L(' / cell', ' / case')}`, note: L('Four lanes, faster', 'Quatre voies, rapide'), hint: L('A wide, fast road that holds far more traffic. Placed the same way as a road', 'Une route large et rapide qui absorbe bien plus de trafic. Se pose comme une rue') },
+      { id: 'highway', label: L('Expressway', 'Voie rapide'), key: 'X', price: `${money(COST_HIGHWAY)}${L(' / cell', ' / case')}`, note: L('Fastest · no frontage', 'La plus rapide · sans riverains'), hint: L('Six lanes at expressway speed for crossing the city. Nothing can be zoned or built along it, so feed it with ordinary streets', 'Six voies à vitesse rapide pour traverser la ville. Rien ne peut être zoné ni construit le long : alimentez-la par des rues ordinaires') },
+      { id: 'motorway', label: L('One-way highway', 'Autoroute 1 sens'), price: `${money(COST_MOTORWAY)}${L(' / cell', ' / case')}`, note: L('3 lanes · one way', '3 voies · sens unique'), hint: L('One carriageway of a motorway, three lanes in the direction you draw it. Draw the other direction as a second road beside it, as in Cities: Skylines 2. No frontage', 'Une chaussée d’autoroute, trois voies dans le sens du tracé. Tracez l’autre sens juste à côté, façon Cities: Skylines 2. Sans riverains') },
+      { id: 'highway2', label: L('Two-lane highway', 'Route 2 voies'), price: `${money(COST_HIGHWAY2)}${L(' / cell', ' / case')}`, note: L('2 lanes · one way', '2 voies · sens unique'), hint: L('A smaller one-way highway, two lanes in the direction you draw it. Pair two of them for a regional road; slip roads join it the same way as the motorway', 'Une petite route à sens unique, deux voies dans le sens du tracé. Associez-en deux pour un axe régional ; les bretelles s’y branchent comme sur l’autoroute') },
+      { id: 'ramp', label: L('Highway ramp', 'Bretelle'), price: `${money(COST_RAMP)}${L(' / cell', ' / case')}`, note: L('1 lane · one way', '1 voie · sens unique'), hint: L('A slip road on or off a highway, one way in the direction you draw it. Start it from a highway to make an exit, end it on one to make an on-ramp; press + for a flyover or − to dive under', 'Une bretelle d’entrée ou de sortie, à sens unique dans le sens du tracé. Partez d’une autoroute pour une sortie, finissez dessus pour une entrée ; + pour un saut-de-mouton, − pour passer dessous') },
+      { id: 'entry', label: L('City entrance', 'Entrée de ville'), price: money(COST_ENTRY), note: L('New highway access', 'Nouvel accès autoroute'), hint: L('Choose a clear map edge. Adds a seven-cell avenue connecting to the outside world. Unlocks at Small town', 'Choisissez un bord de carte dégagé. Ajoute une avenue de sept cases vers le monde extérieur. Dès Petite ville') },
+      { id: 'bikelane', label: L('Bike lanes', 'Pistes cyclables'), price: L('$12 / cell', '12 $ / case'), note: L('Upgrade a street', 'Améliore une rue'), hint: L('Click a surface street or avenue to add compact bike lanes beside its curbs. Click again to remove. Not available on highways, narrow lanes, bridges or roundabouts', 'Cliquez une rue ou une avenue pour ajouter des pistes cyclables le long des trottoirs. Recliquez pour retirer. Indisponible sur autoroutes, ruelles, ponts et ronds-points') },
+      { id: 'upgrade', label: L('Upgrade', 'Élargir'), key: 'U', price: L('Difference', 'La différence'), note: L('Widen one step', 'Élargit d’un cran'), hint: L('Click a road to widen it one step: lane, street, avenue, expressway, then back to a lane. Drag along a road to change just that stretch. Widening costs the difference; narrowing is free', 'Cliquez une route pour l’élargir d’un cran : ruelle, rue, avenue, voie rapide, puis retour à ruelle. Glissez le long pour un tronçon. L’élargissement coûte la différence ; rétrécir est gratuit') },
+      { id: 'edit', label: L('Edit roads', 'Modifier routes'), key: 'N', price: L('Extra length', 'Longueur ajoutée'), note: L('Drag points and bends', 'Glisser points et virages'), hint: L('Drag a junction or road end to move it: the roads follow, keep their curves, and join whatever they cross. Drag the middle of a road to bend it. You pay only for road you add', 'Glissez un carrefour ou une extrémité pour le déplacer : les routes suivent, gardent leurs courbes et rejoignent ce qu’elles croisent. Glissez le milieu d’une route pour la courber. Vous ne payez que la route ajoutée') },
+      { id: 'addlane', label: L('Add lane', 'Ajouter une voie'), price: L('Per lane', 'Par voie'), note: L('Widen one side', 'Élargit un côté'), hint: L('Drag along one side of a road to add a lane there for that stretch; it tapers in and out, and one that ends at a junction becomes a turn pocket. Click for the whole road. Hold Shift to take a lane away, which is free. Cars pick their lane for the turn ahead and change lanes to get by', 'Glissez le long d’un côté pour y ajouter une voie sur ce tronçon ; fuselé aux extrémités, devient une voie de présélection au carrefour. Cliquez pour toute la route. Maj + glisser retire une voie, gratuitement. Les voitures choisissent leur voie selon leur direction et changent de voie pour doubler') },
+      { id: 'cut', label: L('Cut', 'Couper'), key: 'Z', price: L('Free', 'Gratuit'), note: L('Remove a road or a stretch', 'Retire route ou tronçon'), hint: L('Click a road to remove it up to the next junctions, or drag along it to cut out just that stretch. Bridges and tunnels come out whole', 'Cliquez une route pour la retirer jusqu’aux carrefours voisins, ou glissez pour ne couper que ce tronçon. Ponts et tunnels sortent d’un bloc') },
     ],
   },
   {
-    id: 'traffic', label: 'Traffic',
+    id: 'traffic', label: t('cat.traffic'),
     tools: [
-      { id: 'roundabout', label: 'Roundabout', key: 'O', price: `${money(COST_ROUNDABOUT)}+`, note: 'Never stops', hint: 'Click a junction. Traffic circulates one way and nobody has to wait. Pick the ring beside the cards: matched to the roads, single lane, two lanes, or grand' },
-      { id: 'light', label: 'Signal', key: 'T', price: money(COST_LIGHT), note: 'Busy crossings', hint: 'Click a junction to add traffic lights; click a signalised one to edit its plan: phases, green times, and which movements go (click the arrows). Adaptive timing follows the traffic' },
-      { id: 'stopsign', label: 'Stop signs', key: 'K', price: money(COST_STOP), note: 'All-way halt', hint: 'Click a junction to make every approach stop before entering. Slower than lights, but it keeps a quiet crossing orderly and needs no signal' },
-      { id: 'oneway', label: 'One-way', key: 'Y', price: 'Free', note: 'Click to cycle', hint: 'Click a road to cycle: one-way, reversed, two-way' },
-      { id: 'calm', label: 'Calm street', key: 'J', price: `${money(COST_CALM)} / cell`, note: 'Slower, safer', hint: 'Click a street to add traffic calming: drivers run at about half speed and collisions become rare. Click again to remove it. Expressways cannot be calmed' },
+      { id: 'roundabout', label: L('Roundabout', 'Rond-point'), key: 'O', price: `${money(COST_ROUNDABOUT)}+`, note: L('Never stops', 'Ne s’arrête jamais'), hint: L('Click a junction. Traffic circulates one way and nobody has to wait. Pick the ring beside the cards: matched to the roads, single lane, two lanes, or grand', 'Cliquez un carrefour. La circulation tourne à sens unique sans attendre. Choisissez l’anneau à côté des cartes : adapté aux routes, une voie, deux voies, ou grand') },
+      { id: 'light', label: L('Signal', 'Feux'), key: 'T', price: money(COST_LIGHT), note: L('Busy crossings', 'Carrefours chargés'), hint: L('Click a junction to add traffic lights; click a signalised one to edit its plan: phases, green times, and which movements go (click the arrows). Adaptive timing follows the traffic', 'Cliquez un carrefour pour des feux ; recliquez un carrefour à feux pour régler son plan : phases, durées de vert, mouvements autorisés (cliquez les flèches). Le mode adaptatif suit le trafic') },
+      { id: 'stopsign', label: L('Stop signs', 'Stops'), key: 'K', price: money(COST_STOP), note: L('All-way halt', 'Arrêt à toutes branches'), hint: L('Click a junction to make every approach stop before entering. Slower than lights, but it keeps a quiet crossing orderly and needs no signal', 'Cliquez un carrefour pour imposer l’arrêt à chaque entrée. Plus lent que les feux, mais ordonné et sans signalisation') },
+      { id: 'oneway', label: L('One-way', 'Sens unique'), key: 'Y', price: L('Free', 'Gratuit'), note: L('Click to cycle', 'Cliquez pour changer'), hint: L('Click a road to cycle: one-way, reversed, two-way', 'Cliquez une route pour changer : sens unique, inversé, double sens') },
+      { id: 'calm', label: L('Calm street', 'Rue apaisée'), key: 'J', price: `${money(COST_CALM)}${L(' / cell', ' / case')}`, note: L('Slower, safer', 'Plus lente, plus sûre'), hint: L('Click a street to add traffic calming: drivers run at about half speed and collisions become rare. Click again to remove it. Expressways cannot be calmed', 'Cliquez une rue pour l’apaiser : vitesse divisée par deux environ, collisions rares. Recliquez pour retirer. Impossible sur voie rapide') },
     ],
   },
   {
-    id: 'zones', label: 'Zones',
+    id: 'zones', label: t('cat.zones'),
     tools: [
-      { id: 'res', label: 'Residential', key: '1', price: `${money(COST_ZONE)} / cell`, note: 'Homes', hint: 'Paint the cells along a road: they show while a zone tool is in hand, up to three rows back. Shift-drag unzones. Homes grow on them facing the street' },
-      { id: 'com', label: 'Commercial', key: '2', price: `${money(COST_ZONE)} / cell`, note: 'Shops and commerce', hint: 'Paint the cells along a road; Shift-drag unzones. Shops want customers nearby' },
-      { id: 'office', label: 'Offices', price: `${money(COST_ZONE)} / cell`, note: 'Clean jobs · needs education', hint: 'Clean employment with no industrial pollution. Unlocks at 900 residents; upgrades need 25% then 50% education coverage' },
-      { id: 'ind', label: 'Industrial', key: '3', price: `${money(COST_ZONE)} / cell`, note: 'Jobs, pollutes', hint: 'Paint the cells along a road; Shift-drag unzones. Pollutes the ground around it, so keep it away from homes' },
-      { id: 'farm', label: 'Farmland', price: `${money(COST_ZONE)} / cell`, note: 'Clean rural jobs', hint: 'Fields, barns and greenhouses. Meets industrial demand with few jobs but no pollution and little power; fields drink extra water' },
-      { id: 'leisure', label: 'Leisure & tourism', price: `${money(COST_ZONE)} / cell`, note: 'Hotels, cafés, nightlife', hint: 'Meets commercial demand with cafés, hotels and nightlife. Pays more tax near parks and the river. Unlocks at 400 residents' },
+      { id: 'res', label: L('Residential', 'Résidentiel'), key: '1', price: `${money(COST_ZONE)}${L(' / cell', ' / case')}`, note: L('Homes', 'Logements'), hint: L('Paint the cells along a road: they show while a zone tool is in hand, up to three rows back. Shift-drag unzones. Homes grow on them facing the street', 'Peignez les cases le long d’une route : visibles tant qu’un outil de zone est en main, jusqu’à trois rangées. Maj + glisser dézone. Les logements y poussent face à la rue') },
+      { id: 'com', label: L('Commercial', 'Commerces'), key: '2', price: `${money(COST_ZONE)}${L(' / cell', ' / case')}`, note: L('Shops and commerce', 'Boutiques et commerces'), hint: L('Paint the cells along a road; Shift-drag unzones. Shops want customers nearby', 'Peignez les cases le long d’une route ; Maj + glisser dézone. Les boutiques veulent des clients à proximité') },
+      { id: 'office', label: L('Offices', 'Bureaux'), price: `${money(COST_ZONE)}${L(' / cell', ' / case')}`, note: L('Clean jobs · needs education', 'Emplois propres · exige éducation'), hint: L('Clean employment with no industrial pollution. Unlocks at 900 residents; upgrades need 25% then 50% education coverage', 'Emplois propres sans pollution industrielle. Dès 900 habitants ; les évolutions exigent 25 % puis 50 % de couverture scolaire') },
+      { id: 'ind', label: L('Industrial', 'Industrie'), key: '3', price: `${money(COST_ZONE)}${L(' / cell', ' / case')}`, note: L('Jobs, pollutes', 'Emplois, pollue'), hint: L('Paint the cells along a road; Shift-drag unzones. Pollutes the ground around it, so keep it away from homes', 'Peignez les cases le long d’une route ; Maj + glisser dézone. Pollue le sol alentour, tenez-la loin des logements') },
+      { id: 'farm', label: L('Farmland', 'Fermes'), price: `${money(COST_ZONE)}${L(' / cell', ' / case')}`, note: L('Clean rural jobs', 'Emplois ruraux propres'), hint: L('Fields, barns and greenhouses. Meets industrial demand with few jobs but no pollution and little power; fields drink extra water', 'Champs, granges et serres. Répond à la demande industrielle avec peu d’emplois mais sans pollution ni grosse consommation ; les champs boivent plus d’eau') },
+      { id: 'leisure', label: L('Leisure & tourism', 'Loisirs & tourisme'), price: `${money(COST_ZONE)}${L(' / cell', ' / case')}`, note: L('Hotels, cafés, nightlife', 'Hôtels, cafés, vie nocturne'), hint: L('Meets commercial demand with cafés, hotels and nightlife. Pays more tax near parks and the river. Unlocks at 400 residents', 'Répond à la demande commerciale avec cafés, hôtels et vie nocturne. Rapporte plus près des parcs et de la rivière. Dès 400 habitants') },
     ],
   },
   {
-    id: 'power', label: 'Electricity',
+    id: 'power', label: t('cat.power'),
     tools: [
-      { id: 'wind', label: 'Wind turbine', price: svc(T_WIND), note: `${SERVICES[T_WIND].power} MW · clean`, hint: 'Place beside a road. Power travels along connected roads' },
-      { id: 'solar', label: 'Solar farm', price: svc(T_SOLAR), note: '1,800 MW · clean', hint: 'Clean, high-capacity electricity with low running costs. Unlocks at Thriving town' },
-      { id: 'gas', label: 'Gas plant', price: svc(T_GAS), note: `${SERVICES[T_GAS].power.toLocaleString()} MW · some smoke`, hint: 'Less output than coal and about a third of the pollution. Unlocks at Growing village' },
-      { id: 'coal', label: 'Coal plant', price: svc(T_COAL), note: `${SERVICES[T_COAL].power.toLocaleString()} MW · polluting`, hint: 'Lots of power and lots of ground pollution. Keep it away from homes and water towers' },
-      { id: 'hydro', label: 'Hydro dam', price: svc(T_HYDRO), note: `${SERVICES[T_HYDRO].power.toLocaleString()} MW · clean`, hint: 'Build on the river bank. Clean, steady power from the current. Unlocks at Thriving town' },
-      { id: 'nuclear', label: 'Nuclear plant', price: svc(T_NUCLEAR), note: `${SERVICES[T_NUCLEAR].power.toLocaleString()} MW · 3 × 3`, hint: 'Enormous clean output for a large city, at a high price and upkeep. Unlocks at Regional capital' },
+      { id: 'wind', label: serviceName('Wind turbine'), price: svc(T_WIND), note: `${SERVICES[T_WIND].power} MW ${L('· clean', '· propre')}`, hint: L('Place beside a road. Power travels along connected roads', 'Placez près d’une route. L’électricité voyage le long des routes connectées') },
+      { id: 'solar', label: serviceName('Solar farm'), price: svc(T_SOLAR), note: L('1,800 MW · clean', '1 800 MW · propre'), hint: L('Clean, high-capacity electricity with low running costs. Unlocks at Thriving town', 'Électricité propre de grande capacité, faibles coûts d’entretien. Dès Ville prospère') },
+      { id: 'gas', label: serviceName('Gas power plant'), price: svc(T_GAS), note: `${SERVICES[T_GAS].power.toLocaleString()} MW ${L('· some smoke', '· un peu de fumée')}`, hint: L('Less output than coal and about a third of the pollution. Unlocks at Growing village', 'Moins puissante que le charbon et environ trois fois moins polluante. Dès Village en croissance') },
+      { id: 'coal', label: serviceName('Coal plant'), price: svc(T_COAL), note: `${SERVICES[T_COAL].power.toLocaleString()} MW ${L('· polluting', '· polluante')}`, hint: L('Lots of power and lots of ground pollution. Keep it away from homes and water towers', 'Beaucoup d’énergie et beaucoup de pollution du sol. Loin des logements et des châteaux d’eau') },
+      { id: 'hydro', label: serviceName('Hydroelectric dam'), price: svc(T_HYDRO), note: `${SERVICES[T_HYDRO].power.toLocaleString()} MW ${L('· clean', '· propre')}`, hint: L('Build on the river bank. Clean, steady power from the current. Unlocks at Thriving town', 'À construire au bord de la rivière. Énergie propre et stable du courant. Dès Ville prospère') },
+      { id: 'nuclear', label: serviceName('Nuclear power plant'), price: svc(T_NUCLEAR), note: `${SERVICES[T_NUCLEAR].power.toLocaleString()} MW · 3 × 3`, hint: L('Enormous clean output for a large city, at a high price and upkeep. Unlocks at Regional capital', 'Production propre énorme pour une grande ville, à prix fort et gros entretien. Dès Capitale régionale') },
     ],
   },
   {
-    id: 'water', label: 'Water',
+    id: 'water', label: t('cat.water'),
     tools: [
-      { id: 'tower', label: 'Water tower', price: svc(T_TOWER), note: `${SERVICES[T_TOWER].water} water`, hint: 'Works anywhere beside a road, but keep it off polluted ground' },
-      { id: 'pump', label: 'River pump', price: svc(T_PUMP), note: `${SERVICES[T_PUMP].water.toLocaleString()} water`, hint: 'Must touch the river. Put it upstream of any sewage outlet (arrows on the water show the flow)' },
-      { id: 'treatment', label: 'Sewage treatment', price: svc(T_TREATMENT), note: '2,200 sewage · 95% filtered', hint: 'Build on the river bank. Electricity powers filtration, reducing pollution from treated sewage by 95%' },
-      { id: 'docks', label: 'Fishing docks', price: svc(T_DOCKS), note: `${DOCK_JOBS} jobs · boats`, hint: 'Build on the river bank. The docks put fishing boats on the river and sell the catch; sewage upstream thins it, so keep outlets downstream or treated. Unlocks at Small town' },
-      { id: 'outlet', label: 'Sewage outlet', price: svc(T_OUTLET), note: `${SERVICES[T_OUTLET].sewage.toLocaleString()} sewage`, hint: 'Must touch the river. Fouls the water downstream of it' },
-      { id: 'barrier', label: 'Flood barrier', price: svc(T_FLOOD_BARRIER), note: `Protects ${FLOOD_BARRIER_RADIUS} cells`, hint: 'Build on the river bank. The ground within seven cells of a barrier stands higher than the water can normally climb, so a swollen river spills elsewhere. Unlocks at Small town' },
+      { id: 'tower', label: serviceName('Water tower'), price: svc(T_TOWER), note: `${SERVICES[T_TOWER].water}${L(' water', ' d’eau')}`, hint: L('Works anywhere beside a road, but keep it off polluted ground', 'Fonctionne partout près d’une route, mais loin des sols pollués') },
+      { id: 'pump', label: L('River pump', 'Pompe de rivière'), price: svc(T_PUMP), note: `${SERVICES[T_PUMP].water.toLocaleString()}${L(' water', ' d’eau')}`, hint: L('Must touch the river. Put it upstream of any sewage outlet (arrows on the water show the flow)', 'Doit toucher la rivière. Placez-la en amont des émissaires (les flèches montrent le courant)') },
+      { id: 'treatment', label: serviceName('Sewage treatment plant'), price: svc(T_TREATMENT), note: L('2,200 sewage · 95% filtered', '2 200 égouts · 95 % filtrés'), hint: L('Build on the river bank. Electricity powers filtration, reducing pollution from treated sewage by 95%', 'Au bord de la rivière. L’électricité alimente la filtration, qui réduit de 95 % la pollution traitée') },
+      { id: 'docks', label: serviceName('Fishing docks'), price: svc(T_DOCKS), note: `${DOCK_JOBS}${L(' jobs · boats', ' emplois · bateaux')}`, hint: L('Build on the river bank. The docks put fishing boats on the river and sell the catch; sewage upstream thins it, so keep outlets downstream or treated. Unlocks at Small town', 'Au bord de la rivière. Les docks envoient des bateaux pêcher et vendent la pêche ; les égouts en amont l’appauvrissent, gardez les émissaires en aval ou traités. Dès Petite ville') },
+      { id: 'outlet', label: serviceName('Sewage outlet'), price: svc(T_OUTLET), note: `${SERVICES[T_OUTLET].sewage.toLocaleString()}${L(' sewage', ' égouts')}`, hint: L('Must touch the river. Fouls the water downstream of it', 'Doit toucher la rivière. Souille l’eau en aval') },
+      { id: 'barrier', label: serviceName('Flood barrier'), price: svc(T_FLOOD_BARRIER), note: L(`Protects ${FLOOD_BARRIER_RADIUS} cells`, `Protège ${FLOOD_BARRIER_RADIUS} cases`), hint: L('Build on the river bank. The ground within seven cells of a barrier stands higher than the water can normally climb, so a swollen river spills elsewhere. Unlocks at Small town', 'Au bord de la rivière. Le sol à moins de sept cases d’une digue reste au-dessus de l’eau, la rivière en crue déborde ailleurs. Dès Petite ville') },
     ],
   },
   {
-    id: 'land', label: 'Land',
+    id: 'land', label: t('cat.land'),
     tools: [
-      { id: 'lower', label: 'Lower ground', price: `${money(COST_LOWER)}–${money(COST_DIG)} / cell`, note: 'Take down, then dig', hint: 'Paint to take the ground down a storey with every pass: a hill comes down cheaply, and at ground level you dig in, up to three storeys, the river bed too. A basin fills from below into a lake; a channel cut from the river bank carries the river along it, and damming the old bed then moves the river for good' },
-      { id: 'raise', label: 'Raise ground', price: `${money(COST_RAISE)}–${money(COST_FILL)} / cell`, note: 'Fill, then pile up', hint: 'Paint to bring the ground up a storey with every pass: a hole or the river is filled in to buildable land (dam the river and the water gathers behind it), and level ground is piled into hills up to four storeys. Nothing can be built or driven on raised ground, but forests climb it' },
-      { id: 'flat', label: 'Flatten', price: 'By the storey', note: 'Back to level', hint: 'Paint to bring the ground back to bank level whatever it was: hills come down, holes are filled, and river cells become land' },
+      { id: 'lower', label: L('Lower ground', 'Abaisser'), price: `${money(COST_LOWER)}–${money(COST_DIG)}${L(' / cell', ' / case')}`, note: L('Take down, then dig', 'Descend, puis creuse'), hint: L('Paint to take the ground down a storey with every pass: a hill comes down cheaply, and at ground level you dig in, up to three storeys, the river bed too. A basin fills from below into a lake; a channel cut from the river bank carries the river along it, and damming the old bed then moves the river for good', 'Peignez pour baisser le sol d’un étage par passe : une colline s’aplanit, au niveau du sol on creuse, jusqu’à trois étages, lit de rivière compris. Une cuvette se remplit en lac ; un canal creusé depuis la berge détourne la rivière, et un barrage sur l’ancien lit la déplace pour de bon') },
+      { id: 'raise', label: L('Raise ground', 'Rehausser'), price: `${money(COST_RAISE)}–${money(COST_FILL)}${L(' / cell', ' / case')}`, note: L('Fill, then pile up', 'Remblaie, puis élève'), hint: L('Paint to bring the ground up a storey with every pass: a hole or the river is filled in to buildable land (dam the river and the water gathers behind it), and level ground is piled into hills up to four storeys. Nothing can be built or driven on raised ground, but forests climb it', 'Peignez pour monter le sol d’un étage par passe : un trou ou la rivière devient terrain constructible (barrez la rivière et l’eau s’accumule derrière), et le plat devient collines jusqu’à quatre étages. Rien ne se construit ni ne roule sur les hauteurs, mais les forêts y grimpent') },
+      { id: 'flat', label: L('Flatten', 'Aplanir'), price: L('By the storey', 'Par étage'), note: L('Back to level', 'Retour au niveau'), hint: L('Paint to bring the ground back to bank level whatever it was: hills come down, holes are filled, and river cells become land', 'Peignez pour ramener le sol au niveau des berges : collines arasées, trous comblés, cases de rivière redevenues terrain') },
     ],
   },
   {
-    id: 'districts', label: 'Districts',
+    id: 'districts', label: t('cat.districts'),
     tools: [
-      { id: 'district', label: 'Paint district', price: 'Free', note: 'Local policies', hint: 'Brush cells into the district chosen in the district panel; pick a brush size beside the cards. Each district can have its own policies, such as a high-rise ban or a tax break' },
-      { id: 'undistrict', label: 'Erase district', price: 'Free', note: 'Back to citywide', hint: 'Brush cells out of any district' },
+      { id: 'district', label: L('Paint district', 'Peindre quartier'), price: L('Free', 'Gratuit'), note: L('Local policies', 'Politiques locales'), hint: L('Brush cells into the district chosen in the district panel; pick a brush size beside the cards. Each district can have its own policies, such as a high-rise ban or a tax break', 'Peignez les cases dans le quartier choisi au panneau ; taille de pinceau à côté des cartes. Chaque quartier peut avoir ses politiques : interdiction des tours, exonération fiscale…') },
+      { id: 'undistrict', label: L('Erase district', 'Effacer quartier'), price: L('Free', 'Gratuit'), note: L('Back to citywide', 'Retour au droit commun'), hint: L('Brush cells out of any district', 'Peignez pour retirer des cases de tout quartier') },
     ],
   },
   {
-    id: 'services', label: 'Services',
+    id: 'services', label: t('cat.services'),
     tools: (['clinic', 'hospital', 'cityhospital', 'school', 'fire', 'police', 'policehq', 'recycling', 'university', 'cemetery', 'crematorium', 'postoffice'] as Tool[]).map(id => {
       const spec = SERVICES[SERVICE_TOOL[id]!];
-      return { id, label: spec.name, price: money(spec.cost), note: `Base $${spec.upkeep}/s · ${spec.radius} cell radius`,
-        hint: `${spec.name}: serves ${spec.capacity?.toLocaleString()} residents within ${spec.radius} cells. Both building and homes need highway-connected roads. Unlocks at ${MILESTONES[spec.unlock ?? 0].name}` };
+      const milestone = spec.unlock ?? 0;
+      return { id, label: serviceName(spec.name), price: money(spec.cost), note: L(`Base $${spec.upkeep}/s · ${spec.radius} cell radius`, `Base ${spec.upkeep} $/s · rayon ${spec.radius} cases`),
+        hint: L(`${spec.name}: serves ${spec.capacity?.toLocaleString()} residents within ${spec.radius} cells. Both building and homes need highway-connected roads. Unlocks at ${MILESTONES[milestone].name}`, `${serviceName(spec.name)} : dessert ${spec.capacity?.toLocaleString()} habitants dans un rayon de ${spec.radius} cases. Le bâtiment et les logements doivent être reliés à l’autoroute. Dès ${milestoneName(milestone, MILESTONES[milestone].name)}`) };
     }),
   },
   {
-    id: 'transport', label: 'Transport', tools: [
-      { id: 'bus', label: 'Bus stop', price: svc(T_BUS), note: '9-cell catchment · $0.45/s', hint: 'Place two stops near homes and jobs. Automatic return routes follow roads; congestion reduces capacity. Needs utilities' },
-      { id: 'station', label: 'Railway station', price: svc(T_STATION), note: '3 × 2 cells · $3/s', hint: 'Two stations connect automatically by elevated tracks along road corridors. A station near a city entrance also runs a service out of town. 18-cell catchment, 120 passenger capacity per connection' },
-      { id: 'subway', label: 'Metro station', price: svc(T_SUBWAY), note: '1 cell · $2.5/s', hint: 'Metro stations link to each other automatically through underground tunnels, so trains skip road traffic. 14-cell catchment, 100 passenger capacity per connection. Needs utilities' },
-      { id: 'taxi', label: 'Taxi stop', price: svc(T_TAXI), note: '4 cabs · On-demand rides', hint: 'One stop dispatches up to four taxis for nearby passengers. Cabs drive directly to destinations through traffic. Needs road access and utilities' },
-      { id: 'trolley', label: 'Trolleybus stop', price: svc(T_TROLLEY), note: 'Electric road transit', hint: 'Place two stops beside connected surface streets or avenues. Operating stops create trolleybus routes automatically and need utilities' },
-      { id: 'parking', label: SERVICES[T_PARKING].name, price: svc(T_PARKING), note: '1 cell · 8 spaces', hint: 'A small lot beside a road for shoppers and visitors to leave their cars. Needs a road; no utilities' },
-      { id: 'parkingm', label: SERVICES[T_PARKING_M].name, price: svc(T_PARKING_M), note: '2 × 2 · 36 spaces', hint: 'A bigger car park with lamps down its aisles. Needs a road; no utilities. Right-click or G rotates it' },
-      { id: 'parkingl', label: SERVICES[T_PARKING_L].name, price: svc(T_PARKING_L), note: '3 × 2 · 56 spaces', hint: `A large car park for a busy centre. Needs a road; no utilities. Unlocks at ${MILESTONES[SERVICES[T_PARKING_L].unlock ?? 0].name}` },
-      { id: 'airport', label: 'Regional airport', price: svc(T_AIRPORT), note: '8 × 3 cells · $7/s', hint: 'Clear an 8 × 3 site, its perimeter and 12 cells beyond each runway end. Rotate to aim the flight path. Flights replace some incoming car trips within 24 cells; needs utilities' },
+    id: 'transport', label: t('cat.transport'), tools: [
+      { id: 'bus', label: serviceName('Bus stop'), price: svc(T_BUS), note: L('9-cell catchment · $0.45/s', 'Zone 9 cases · 0,45 $/s'), hint: L('Place two stops near homes and jobs. Automatic return routes follow roads; congestion reduces capacity. Needs utilities', 'Placez deux arrêts près des logements et des emplois. Lignes aller-retour automatiques le long des routes ; la congestion réduit la capacité. Réseaux requis') },
+      { id: 'station', label: serviceName('Railway station'), price: svc(T_STATION), note: L('3 × 2 cells · $3/s', '3 × 2 cases · 3 $/s'), hint: L('Two stations connect automatically by elevated tracks along road corridors. A station near a city entrance also runs a service out of town. 18-cell catchment, 120 passenger capacity per connection', 'Deux gares se relient automatiquement par voie aérienne le long des routes. Une gare près d’une entrée de ville ouvre aussi une ligne vers l’extérieur. Zone 18 cases, 120 voyageurs par liaison') },
+      { id: 'subway', label: serviceName('Metro station'), price: svc(T_SUBWAY), note: L('1 cell · $2.5/s', '1 case · 2,50 $/s'), hint: L('Metro stations link to each other automatically through underground tunnels, so trains skip road traffic. 14-cell catchment, 100 passenger capacity per connection. Needs utilities', 'Les stations de métro se relient automatiquement par tunnels, les trains évitent la circulation. Zone 14 cases, 100 voyageurs par liaison. Réseaux requis') },
+      { id: 'taxi', label: serviceName('Taxi stop'), price: svc(T_TAXI), note: L('4 cabs · On-demand rides', '4 taxis · à la demande'), hint: L('One stop dispatches up to four taxis for nearby passengers. Cabs drive directly to destinations through traffic. Needs road access and utilities', 'Un arrêt envoie jusqu’à quatre taxis vers les passagers proches. Les taxis roulent directement à destination dans la circulation. Accès routier et réseaux requis') },
+      { id: 'trolley', label: serviceName('Trolleybus stop'), price: svc(T_TROLLEY), note: L('Electric road transit', 'Transport routier électrique'), hint: L('Place two stops beside connected surface streets or avenues. Operating stops create trolleybus routes automatically and need utilities', 'Placez deux arrêts le long de rues ou avenues connectées. Les arrêts en service créent automatiquement des lignes de trolleybus ; réseaux requis') },
+      { id: 'parking', label: serviceName(SERVICES[T_PARKING].name), price: svc(T_PARKING), note: L('1 cell · 8 spaces', '1 case · 8 places'), hint: L('A small lot beside a road for shoppers and visitors to leave their cars. Needs a road; no utilities', 'Un petit terrain près d’une route pour garer clients et visiteurs. Route requise ; sans réseaux') },
+      { id: 'parkingm', label: serviceName(SERVICES[T_PARKING_M].name), price: svc(T_PARKING_M), note: L('2 × 2 · 36 spaces', '2 × 2 · 36 places'), hint: L('A bigger car park with lamps down its aisles. Needs a road; no utilities. Right-click or G rotates it', 'Un parking plus grand, éclairé dans ses allées. Route requise ; sans réseaux. Clic droit ou G pour pivoter') },
+      { id: 'parkingl', label: serviceName(SERVICES[T_PARKING_L].name), price: svc(T_PARKING_L), note: L('3 × 2 · 56 spaces', '3 × 2 · 56 places'), hint: L(`A large car park for a busy centre. Needs a road; no utilities. Unlocks at ${MILESTONES[SERVICES[T_PARKING_L].unlock ?? 0].name}`, `Un grand parking pour un centre animé. Route requise ; sans réseaux. Dès ${milestoneName(SERVICES[T_PARKING_L].unlock ?? 0, MILESTONES[SERVICES[T_PARKING_L].unlock ?? 0].name)}`) },
+      { id: 'airport', label: serviceName('Regional airport'), price: svc(T_AIRPORT), note: L('8 × 3 cells · $7/s', '8 × 3 cases · 7 $/s'), hint: L('Clear an 8 × 3 site, its perimeter and 12 cells beyond each runway end. Rotate to aim the flight path. Flights replace some incoming car trips within 24 cells; needs utilities', 'Dégagez un site de 8 × 3, son périmètre et 12 cases au-delà de chaque bout de piste. Pivotez pour orienter l’approche. Les vols remplacent des trajets auto entrants dans un rayon de 24 cases ; réseaux requis') },
     ],
   },
   {
     // Parks and the smaller landscaping pieces share one menu.
-    id: 'parks', label: 'Parks',
+    id: 'parks', label: t('cat.parks'),
     tools: [...(['parkpath', 'lawn', 'plaza', 'pond', 'parkshop', 'park', 'playground', 'sports', 'garden'] as Tool[]).map(id => {
       const spec = SERVICES[SERVICE_TOOL[id]!];
-      return { id, label: spec.name, price: money(spec.cost), note: id === 'parkpath' ? 'Straight or curved · $15 / cell' : ['lawn', 'plaza'].includes(id) ? 'Drag to paint' : 'Place and rotate',
-        hint: spec.decoration ? 'Create your own park on clear land. Join paths, plazas or lawns to a road; ponds and kiosks belong beside them. Paths connect automatically. Right-click or G rotates a piece' : `Place ${spec.name.toLowerCase()} near residents for recreation` };
+      return { id, label: serviceName(spec.name), price: money(spec.cost), note: id === 'parkpath' ? L('Straight or curved · $15 / cell', 'Droit ou courbe · 15 $ / case') : ['lawn', 'plaza'].includes(id) ? L('Drag to paint', 'Glisser pour peindre') : L('Place and rotate', 'Placer et pivoter'),
+        hint: spec.decoration ? L('Create your own park on clear land. Join paths, plazas or lawns to a road; ponds and kiosks belong beside them. Paths connect automatically. Right-click or G rotates a piece', 'Créez votre parc sur terrain dégagé. Reliez allées, esplanades ou pelouses à une route ; étangs et kiosques à côté. Les allées se connectent seules. Clic droit ou G pour pivoter') : L(`Place ${spec.name.toLowerCase()} near residents for recreation`, `Placez ${serviceName(spec.name).toLowerCase()} près des habitants pour les loisirs`) };
     }), ...(['tree', 'flowers', 'bench', 'fountain'] as Tool[]).map(id => {
       const spec = SERVICES[SERVICE_TOOL[id]!];
-      return { id, label: spec.name, price: money(spec.cost), note: spec.standalone ? 'Grows anywhere' : 'Landscape your city',
-        hint: spec.standalone ? 'Plant on clear land, or replace another decoration. Trees need no road, path or utilities to cheer up the homes around them. Bulldoze removes'
-          : 'Place on clear land, or replace another decoration. Connect to park paths or a road to benefit nearby residents. G rotates; Bulldoze removes' };
-    }), { id: 'landmark' as Tool, label: SERVICES[T_LANDMARK].name, price: svc(T_LANDMARK), note: '2 × 2 · draws tourists', hint: `A landmark that draws ${SERVICES[T_LANDMARK].attraction} visitors a minute to the city and lifts land values around it. Unlocks at ${MILESTONES[SERVICES[T_LANDMARK].unlock ?? 0].name}` }],
+      return { id, label: serviceName(spec.name), price: money(spec.cost), note: spec.standalone ? L('Grows anywhere', 'Pousse partout') : L('Landscape your city', 'Embellissez votre ville'),
+        hint: spec.standalone ? L('Plant on clear land, or replace another decoration. Trees need no road, path or utilities to cheer up the homes around them. Bulldoze removes', 'Plantez sur terrain dégagé ou remplacez un décor. Les arbres n’exigent ni route, ni allée, ni réseaux pour égayer les logements voisins. Le bulldozer retire')
+          : L('Place on clear land, or replace another decoration. Connect to park paths or a road to benefit nearby residents. G rotates; Bulldoze removes', 'Placez sur terrain dégagé ou remplacez un décor. Reliez aux allées ou à une route pour les riverains. G pivote ; le bulldozer retire') };
+    }), { id: 'landmark' as Tool, label: serviceName(SERVICES[T_LANDMARK].name), price: svc(T_LANDMARK), note: L('2 × 2 · draws tourists', '2 × 2 · attire les touristes'), hint: L(`A landmark that draws ${SERVICES[T_LANDMARK].attraction} visitors a minute to the city and lifts land values around it. Unlocks at ${MILESTONES[SERVICES[T_LANDMARK].unlock ?? 0].name}`, `Un monument qui attire ${SERVICES[T_LANDMARK].attraction} visiteurs par minute et valorise les terrains autour. Dès ${milestoneName(SERVICES[T_LANDMARK].unlock ?? 0, MILESTONES[SERVICES[T_LANDMARK].unlock ?? 0].name)}`) }],
   },
   {
-    id: 'bulldoze', label: 'Bulldoze',
-    tools: [{ id: 'bulldoze', label: 'Bulldoze', key: 'B', price: 'Free', hint: 'Drag a rectangle to remove roads, zones and buildings' }],
+    id: 'bulldoze', label: t('cat.bulldoze'),
+    tools: [{ id: 'bulldoze', label: t('cat.bulldoze'), key: 'B', price: L('Free', 'Gratuit'), hint: L('Drag a rectangle to remove roads, zones and buildings', 'Glissez un rectangle pour raser routes, zones et bâtiments') }],
   },
-];
+  ];
+}
 
 const MODES: { id: RoadMode; label: string; hint: string }[] = [
-  { id: 'straight', label: 'Straight', hint: 'Two clicks: start and end' },
-  { id: 'curve', label: 'Curved', hint: 'Three clicks: start, bend, end' },
-  { id: 'smooth', label: 'Smooth', hint: 'Every click continues the road as a flowing curve' },
+  { id: 'straight', label: t('mode.straight'), hint: t('mode.straightHint') },
+  { id: 'curve', label: t('mode.curve'), hint: t('mode.curveHint') },
+  { id: 'smooth', label: t('mode.smooth'), hint: t('mode.smoothHint') },
 ];
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] {
@@ -200,8 +208,8 @@ export class Hud {
   private fundingInputs = new Map<FundingKey, HTMLInputElement>();
   private fundingValues = new Map<FundingKey, HTMLElement>();
   private debtLabel = el('div', 'pnote');
-  private borrow = el('button', 'finance-action', 'Borrow $6,000');
-  private repay = el('button', 'finance-action', 'Repay balance');
+  private borrow = el('button', 'finance-action', L('Borrow $6,000', 'Emprunter 6 000 $'));
+  private repay = el('button', 'finance-action', L('Repay balance', 'Rembourser'));
   private inspector = el('section', 'inspector');
   private inspectorBody = el('div');
   private cityTitle = el('span', 'city-title');
@@ -232,6 +240,7 @@ export class Hud {
   private demandBars: HTMLElement[] = [];
   private toolBtns = new Map<Tool, HTMLButtonElement>();
   private catBtns = new Map<string, HTMLButtonElement>();
+  private categories = buildCategories();
   private modeBtns = new Map<string, HTMLButtonElement>();
   private heightBtns = new Map<number, HTMLButtonElement>();
   private brushBtns: [number, HTMLButtonElement][] = [];
@@ -271,7 +280,7 @@ export class Hud {
   menuPopover!: HTMLElement;
   private walkBtn: HTMLButtonElement = el('button');
   private driveBtn: HTMLButtonElement = el('button');
-  private walkTitle = el('strong', undefined, 'Walking');
+  private walkTitle = el('strong', undefined, t('hud.walking'));
   private walkKeys = el('span');
   private speedo = el('b', 'speedo');
   /** Which height the road tool is drawing at: a tunnel, the surface, or a bridge. */
@@ -293,8 +302,8 @@ export class Hud {
   setRotation(quarter: number, placing: boolean): void {
     this.rotateBtn.classList.toggle('shown', placing);
     this.rotateBtn.style.setProperty('--turn', `${quarter * 90}deg`);
-    const facing = ['north', 'east', 'south', 'west'][quarter & 3];
-    this.rotateBtn.setAttribute('aria-label', `Rotate: facing ${facing}`);
+    const facing = [L('north', 'nord'), L('east', 'est'), L('south', 'sud'), L('west', 'ouest')][quarter & 3];
+    this.rotateBtn.setAttribute('aria-label', L(`Rotate: facing ${facing}`, `Pivoter : vers ${facing}`));
   }
 
   /** Walking hides the building tools and shows how to move; the map comes back on the way out. */
@@ -304,10 +313,8 @@ export class Hud {
     this.driveBtn.classList.toggle('active', on && mode === 'drive');
     document.body.classList.toggle('walking', on);
     const driving = on && mode === 'drive';
-    this.walkTitle.textContent = driving ? 'Driving' : 'Walking';
-    this.walkKeys.textContent = driving
-      ? 'W / S drive and brake · A D steer · Shift nitrous · Space handbrake (drift) · V driver’s seat · Enter at a race ring · R back on the route · Esc or M to park'
-      : 'W A S D to walk · Shift to run · click, then move the mouse to look · Esc or F to leave';
+    this.walkTitle.textContent = driving ? t('hud.driving') : t('hud.walking');
+    this.walkKeys.textContent = driving ? t('hud.driveKeys') : t('hud.walkKeys');
     this.speedo.hidden = !driving;
   }
 
@@ -338,7 +345,7 @@ export class Hud {
     this.messageActions = actions;
     this.welcome.setAttribute('role', 'dialog');
     this.welcome.setAttribute('aria-modal', 'true');
-    this.welcome.setAttribute('aria-label', 'Welcome to Gridburg');
+    this.welcome.setAttribute('aria-label', L('Welcome to Gridburg', 'Bienvenue à Gridburg'));
     root.append(this.welcome);
     window.addEventListener('keydown', e => {
       if (!this.welcome.classList.contains('open')) return;
@@ -350,31 +357,31 @@ export class Hud {
       }
       e.stopImmediatePropagation();
     }, true);
-    this.inspector.setAttribute('aria-label', 'Building inspector');
-    const dismiss = el('button', 'overview-close', 'Close ×');
+    this.inspector.setAttribute('aria-label', L('Building inspector', 'Inspecteur de bâtiment'));
+    const dismiss = el('button', 'overview-close', t('hud.close'));
     dismiss.addEventListener('click', () => actions.closeInspection());
     this.inspector.append(dismiss, this.inspectorBody);
     root.append(this.inspector);
     const progress = el('div', 'city-track');
     progress.append(this.cityFill);
     const overview = el('section', 'city-overview');
-    overview.setAttribute('aria-label', 'City progress and services');
-    const close = el('button', 'overview-close', 'Close ×');
+    overview.setAttribute('aria-label', L('City progress and services', 'Progrès et services de la ville'));
+    const close = el('button', 'overview-close', t('hud.close'));
     close.addEventListener('click', () => overview.classList.remove('open'));
-    overview.append(close, el('h2', undefined, 'Your city, growing up'), this.cityTitle, progress, this.cityNext, el('p', 'pnote', 'Reach population milestones to earn grants and unlock buildings. Earned levels are permanent.'));
+    overview.append(close, el('h2', undefined, t('hud.cityTitle')), this.cityTitle, progress, this.cityNext, el('p', 'pnote', t('hud.cityNote')));
     const serviceGrid = el('div', 'civic-grid');
     for (const [key, label] of Object.entries(CIVIC_LABELS)) {
       const meter = el('div', 'civic-stat');
       const value = el('strong', undefined, '0%');
-      meter.append(el('span', undefined, label), value);
+      meter.append(el('span', undefined, civicLabel(label, key)), value);
       serviceGrid.append(meter);
       this.civicMeters.set(key as CivicNeed, value);
     }
     overview.append(this.transportStats, this.treatmentStats, this.incidentStats);
-    overview.append(serviceGrid, el('p', 'pnote', 'Coverage is the share of residents served. Capacity and distance matter; providers and homes must connect to the highway. Homes need healthcare and education for apartments; high-rises also need safety, fire protection, recycling and parks.'));
+    overview.append(serviceGrid, el('p', 'pnote', t('hud.coverageNote')));
     for (const [i, milestone] of MILESTONES.entries()) {
       const row = el('div', 'milestone');
-      row.append(el('span', 'milestone-level', String(i + 1)), el('strong', undefined, milestone.name), el('span', 'milestone-pop', `${fmt(milestone.population)} residents`), el('span', 'milestone-unlocks', milestone.unlocks), el('span', 'milestone-reward', milestone.reward ? `+$${fmt(milestone.reward)}` : 'Starting tools'));
+      row.append(el('span', 'milestone-level', String(i + 1)), el('strong', undefined, milestoneName(i, milestone.name)), el('span', 'milestone-pop', `${fmt(milestone.population)} ${t('hud.residents')}`), el('span', 'milestone-unlocks', milestoneUnlocks(i, milestone.unlocks)), el('span', 'milestone-reward', milestone.reward ? `+$${fmt(milestone.reward)}` : t('hud.starting')));
       this.milestoneRows.push(row);
       overview.append(row);
     }
@@ -389,17 +396,17 @@ export class Hud {
       return c;
     };
     const moneyChip = el('button', 'chip money');
-    moneyChip.title = 'Budget and taxes';
+    moneyChip.title = L('Budget and taxes', 'Budget et taxes');
     moneyChip.append(icon('money', 17), this.money, this.income, icon('caret', 12));
     const levelChip = el('button', 'chip level');
-    levelChip.title = 'City level: milestones, unlocks and service coverage';
+    levelChip.title = L('City level: milestones, unlocks and service coverage', 'Niveau de ville : paliers, déblocages et couverture');
     levelChip.append(icon('city', 17), this.cityLevel, this.happiness);
     levelChip.addEventListener('click', openOverview);
     chips.append(
       moneyChip,
-      chip('people', 'Population', this.pop),
-      chip('jobs', 'Jobs', this.jobs),
-      chip('car', 'Average commute, and cars on the road', this.commute, this.cars),
+      chip('people', L('Population', 'Population'), this.pop),
+      chip('jobs', L('Jobs', 'Emplois'), this.jobs),
+      chip('car', L('Average commute, and cars on the road', 'Trajet moyen et voitures en circulation'), this.commute, this.cars),
       levelChip,
     );
 
@@ -415,68 +422,68 @@ export class Hud {
       actions.setTax(Number(this.taxInput.value));
     });
     this.taxLabel.textContent = '10%';
-    taxRow.append(el('span', 'label', 'All taxes'), this.taxInput, this.taxLabel);
+    taxRow.append(el('span', 'label', t('hud.allTaxes')), this.taxInput, this.taxLabel);
     // One rate per zone; the single slider above sets them all at once.
     const zoneTaxRows: HTMLElement[] = [];
     TAX_LABELS.forEach((label) => {
       const row = el('label', 'funding-row');
       const slider = el('input');
       slider.type = 'range'; slider.min = '0'; slider.max = '30'; slider.value = '10';
-      slider.setAttribute('aria-label', `${label} tax`);
+      slider.setAttribute('aria-label', taxLabel(label));
       const value = el('span', 'funding-value', '10%');
       slider.addEventListener('input', () => {
         value.textContent = `${slider.value}%`;
         actions.setTaxes(this.zoneTaxInputs.map(i => Number(i.value)) as Taxes);
       });
-      row.append(el('span', undefined, `${label} tax`), slider, value);
+      row.append(el('span', undefined, taxLabel(label)), slider, value);
       this.zoneTaxInputs.push(slider); this.zoneTaxLabels.push(value);
       zoneTaxRows.push(row);
     });
     const incRow = el('div', 'prow');
     incRow.append(el('span', 'label', 'Net income'), this.budgetIncome);
-    budget.append(el('div', 'ptitle', 'City budget'), taxRow, ...zoneTaxRows, el('p', 'pnote', 'Farms pay the industrial rate and leisure the commercial one. A district tax break takes four points off.'));
-    this.taxInput.setAttribute('aria-label', 'Tax rate');
-    for (const [key, label] of [['fareIncome', 'Transport fares'], ['tollIncome', 'Congestion charge'], ['fishingIncome', 'Fishing'], ['exportIncome', 'Goods exports'], ['tourismIncome', 'Tourism'], ['taxIncome', 'Tax revenue'], ['roadExpense', 'Road upkeep'], ['serviceExpense', 'Service upkeep'], ['policyExpense', 'Policies'], ['districtExpense', 'District policies'], ['loanExpense', 'Loan payment']]) {
+    budget.append(el('div', 'ptitle', t('hud.budget')), taxRow, ...zoneTaxRows, el('p', 'pnote', t('hud.taxNote')));
+    this.taxInput.setAttribute('aria-label', L('Tax rate', 'Taux d’imposition'));
+    for (const [key, label] of [['fareIncome', L('Transport fares', 'Recettes transport')], ['tollIncome', L('Congestion charge', 'Péage urbain')], ['fishingIncome', L('Fishing', 'Pêche')], ['exportIncome', L('Goods exports', 'Exportations')], ['tourismIncome', L('Tourism', 'Tourisme')], ['taxIncome', L('Tax revenue', 'Recettes fiscales')], ['roadExpense', L('Road upkeep', 'Entretien des routes')], ['serviceExpense', L('Service upkeep', 'Entretien des services')], ['policyExpense', L('Policies', 'Politiques')], ['districtExpense', L('District policies', 'Politiques de quartier')], ['loanExpense', L('Loan payment', 'Remboursement du prêt')]]) {
       const row = el('div', 'finance-row');
       const value = el('strong');
       row.append(el('span', undefined, label), value);
       this.financeValues.set(key, value);
       budget.append(row);
     }
-    budget.append(incRow, this.goodsLine, el('div', 'ptitle', 'Service funding'));
+    budget.append(incRow, this.goodsLine, el('div', 'ptitle', t('hud.funding')));
     for (const key of FUNDING_KEYS) {
       const row = el('label', 'funding-row');
       const slider = el('input');
       slider.type = 'range'; slider.min = '50'; slider.max = '150'; slider.step = '10'; slider.value = '100';
-      slider.setAttribute('aria-label', `${FUNDING_LABELS[key]} funding`);
+      slider.setAttribute('aria-label', L(`${FUNDING_LABELS[key]} funding`, `Financement : ${fundingLabel(FUNDING_LABELS[key], key)}`));
       const value = el('span', 'funding-value', '100%');
       slider.addEventListener('input', () => { value.textContent = `${slider.value}%`; });
       slider.addEventListener('change', () => actions.setFunding(key, Number(slider.value)));
-      row.append(el('span', undefined, FUNDING_LABELS[key]), slider, value);
+      row.append(el('span', undefined, fundingLabel(FUNDING_LABELS[key], key)), slider, value);
       this.fundingInputs.set(key, slider); this.fundingValues.set(key, value);
       budget.append(row);
     }
-    budget.append(el('p', 'pnote', '50% funding gives 71% capacity; 150% gives 122%. Upkeep scales with funding. Civic buildings also need power, water and sewage. Congestion reduces their capacity.'));
+    budget.append(el('p', 'pnote', t('hud.fundingNote')));
     this.borrow.addEventListener('click', () => actions.loan('take'));
     this.repay.addEventListener('click', () => actions.loan('repay'));
     const loanActions = el('div', 'loan-actions'); loanActions.append(this.borrow, this.repay);
-    budget.append(el('div', 'ptitle', 'Recovery loan'), el('p', 'pnote', `$${LOAN_AMOUNT.toLocaleString()} cash · $${LOAN_TOTAL.toLocaleString()} total repayment · $${LOAN_PAYMENT}/simulation second. One loan at a time; pauses with the city.`), this.debtLabel, loanActions);
+    budget.append(el('div', 'ptitle', t('hud.loan')), el('p', 'pnote', L(`$${LOAN_AMOUNT.toLocaleString()} cash · $${LOAN_TOTAL.toLocaleString()} total repayment · $${LOAN_PAYMENT}/simulation second. One loan at a time; pauses with the city.`, `${LOAN_AMOUNT.toLocaleString()} $ de trésorerie · ${LOAN_TOTAL.toLocaleString()} $ à rembourser au total · ${LOAN_PAYMENT} $/seconde simulée. Un seul prêt à la fois ; en pause avec la ville.`)), this.debtLabel, loanActions);
 
     // Policies popover: standing decisions that cost money every second and change how the city behaves.
     const policyPanel = el('div', 'popover policies');
-    policyPanel.append(el('div', 'ptitle', 'City policies'), el('p', 'pnote', 'Each policy is paid for every second, and the bill grows with the city.'));
+    policyPanel.append(el('div', 'ptitle', t('hud.policies')), el('p', 'pnote', t('hud.policiesNote')));
     for (const id of POLICY_IDS) {
       const spec = POLICIES[id];
       const row = el('label', 'policy-row');
       const box = el('input') as HTMLInputElement;
       box.type = 'checkbox';
-      box.setAttribute('aria-label', spec.label);
+      box.setAttribute('aria-label', policyText(id, 'label', spec.label));
       box.addEventListener('change', () => actions.setPolicy(id, box.checked));
       const text = el('span', 'policy-text');
       text.append(
-        el('strong', undefined, spec.label),
-        el('span', 'policy-effect', spec.effect),
-        el('span', 'pnote', spec.note),
+        el('strong', undefined, policyText(id, 'label', spec.label)),
+        el('span', 'policy-effect', policyText(id, 'effect', spec.effect)),
+        el('span', 'pnote', policyText(id, 'note', spec.note)),
         el('span', 'policy-cost', ''),
       );
       row.append(icon(spec.icon, 20), text, box);
@@ -506,41 +513,41 @@ export class Hud {
       return b;
     };
     menu.append(
-      menuItem('help', 'Welcome tutorial', () => this.showWelcome()),
-      menuItem('plus', 'New city', () => { if (confirm('Start a new city on a new map? Your current city will be lost.')) actions.newCity(); }),
-      menuItem('city', 'Load demo city', actions.demoCity),
-      menuItem('link', 'Copy share link', actions.share),
-      menuItem('menu', 'Main menu', actions.openMenu),
-      menuItem('about', 'About Gridburg', () => this.about.classList.add('open')),
+      menuItem('help', t('hud.tutorial'), () => this.showWelcome()),
+      menuItem('plus', t('hud.newCity'), () => { if (confirm(L('Start a new city on a new map? Your current city will be lost.', 'Commencer une nouvelle ville sur une nouvelle carte ? Votre ville actuelle sera perdue.'))) actions.newCity(); }),
+      menuItem('city', t('hud.demo'), actions.demoCity),
+      menuItem('link', t('hud.share'), actions.share),
+      menuItem('menu', t('hud.mainMenu'), actions.openMenu),
+      menuItem('about', t('hud.about'), () => this.about.classList.add('open')),
     );
     const cheat = menuItem('money', '', () => { cheatLabel(actions.toggleInfiniteMoney()); });
-    const cheatLabel = (on: boolean): void => { cheat.querySelector('span')!.textContent = `Infinite money: ${on ? 'on' : 'off'}`; cheat.classList.toggle('active', on); };
+    const cheatLabel = (on: boolean): void => { cheat.querySelector('span')!.textContent = L(`Infinite money: ${on ? 'on' : 'off'}`, `Argent infini : ${on ? 'oui' : 'non'}`); cheat.classList.toggle('active', on); };
     cheatLabel(false);
     this.setCheatLabel = cheatLabel;
     menu.append(cheat);
-    const trafficBtn = iconBtn('car', 'Traffic congestion overlay', () => { const on = actions.toggleTraffic(); trafficBtn.classList.toggle('active', on); trafficBtn.setAttribute('aria-pressed', String(on)); });
+    const trafficBtn = iconBtn('car', L('Traffic congestion overlay', 'Calque de congestion'), () => { const on = actions.toggleTraffic(); trafficBtn.classList.toggle('active', on); trafficBtn.setAttribute('aria-pressed', String(on)); });
     trafficBtn.setAttribute('aria-pressed', 'false');
-    const polBtn = iconBtn('smog', 'Pollution view (P)', () => polBtn.classList.toggle('active', actions.togglePollution()));
-    this.messagePanel.append(el('div', 'ptitle', 'City messages'), this.messageList);
-    const menuBtn = iconBtn('menu', 'Menu', () => { budget.classList.remove('open'); policyPanel.classList.remove('open'); this.messagePanel.classList.remove('open'); menu.classList.toggle('open'); });
-    const messageBtn = iconBtn('message', 'City messages', () => {
+    const polBtn = iconBtn('smog', L('Pollution view (P)', 'Vue pollution (P)'), () => polBtn.classList.toggle('active', actions.togglePollution()));
+    this.messagePanel.append(el('div', 'ptitle', t('hud.messages')), this.messageList);
+    const menuBtn = iconBtn('menu', L('Menu', 'Menu'), () => { budget.classList.remove('open'); policyPanel.classList.remove('open'); this.messagePanel.classList.remove('open'); menu.classList.toggle('open'); });
+    const messageBtn = iconBtn('message', t('hud.messages'), () => {
       budget.classList.remove('open'); policyPanel.classList.remove('open'); menu.classList.remove('open');
       this.messagePop.classList.remove('show');
       this.messagePanel.classList.toggle('open');
     });
     messageBtn.append(this.messageDot);
     this.messageBtn = messageBtn;
-    const policyBtn = iconBtn('policy', 'City policies', () => { budget.classList.remove('open'); menu.classList.remove('open'); policyPanel.classList.toggle('open'); });
-    const walkBtn = iconBtn('walk', 'Walk the streets (F)', () => actions.toggleWalk());
+    const policyBtn = iconBtn('policy', t('hud.policies'), () => { budget.classList.remove('open'); menu.classList.remove('open'); policyPanel.classList.toggle('open'); });
+    const walkBtn = iconBtn('walk', L('Walk the streets (F)', 'Marcher dans les rues (F)'), () => actions.toggleWalk());
     this.walkBtn = walkBtn;
-    const driveBtn = iconBtn('drive', 'Garage and street racing (M)', () => actions.toggleDrive());
+    const driveBtn = iconBtn('drive', L('Garage and street racing (M)', 'Garage et courses de rue (M)'), () => actions.toggleDrive());
     this.driveBtn = driveBtn;
     this.speedo.hidden = true;
     this.walkHint.append(this.walkTitle, this.speedo, this.walkKeys);
     right.append(
       walkBtn, driveBtn, messageBtn, trafficBtn, polBtn, policyBtn,
-      iconBtn('link', 'Copy a link to this city', actions.share),
-      iconBtn('help', 'Help (H)', () => this.help.classList.toggle('open')),
+      iconBtn('link', L('Copy a link to this city', 'Copier un lien vers cette ville'), actions.share),
+      iconBtn('help', L('Help (H)', 'Aide (H)'), () => this.help.classList.toggle('open')),
       menuBtn,
     );
     moneyChip.addEventListener('click', () => { menu.classList.remove('open'); policyPanel.classList.remove('open'); budget.classList.toggle('open'); });
@@ -555,7 +562,7 @@ export class Hud {
     // ---- the bottom bar: city readouts, the build categories and the clock, all in one strip ------
     const status = el('div', 'status');
     const dem = el('div', 'demand');
-    dem.title = 'Demand for residential, commercial, industrial and office zones';
+    dem.title = L('Demand for residential, commercial, industrial and office zones', 'Demande en zones résidentielles, commerciales, industrielles et de bureaux');
     for (const [i, name] of ['R', 'C', 'I', 'O'].entries()) {
       const wrap = el('div', 'dbar');
       const fill = el('div', `dfill d${i}`);
@@ -566,7 +573,7 @@ export class Hud {
       this.demandBars.push(fill);
     }
     const meters = el('div', 'meters');
-    for (const [k, ic, title] of [['power', 'power', 'Electricity: used / available'], ['water', 'water', 'Water: used / available'], ['sewage', 'sewage', 'Sewage: produced / capacity']] as const) {
+    for (const [k, ic, title] of [['power', 'power', L('Electricity: used / available', 'Électricité : utilisée / disponible')], ['water', 'water', L('Water: used / available', 'Eau : utilisée / disponible')], ['sewage', 'sewage', L('Sewage: produced / capacity', 'Égouts : produits / capacité')]] as const) {
       const row = el('div', `meter ${k}`);
       row.title = title;
       const bar = el('div', 'mbar');
@@ -576,12 +583,12 @@ export class Hud {
     }
     status.append(dem, meters);
 
-    this.clock.title = 'One day lasts 8 simulation minutes. Pausing and speed controls also affect daylight.';
-    this.clock.setAttribute('aria-label', 'City time');
+    this.clock.title = L('One day lasts 8 simulation minutes. Pausing and speed controls also affect daylight.', 'Un jour dure 8 minutes simulées. Pause et vitesses influent aussi sur la lumière du jour.');
+    this.clock.setAttribute('aria-label', L('City time', 'Heure de la ville'));
     const speed = el('div', 'speed');
     for (const [v, label] of [[0, '❚❚'], [1, '▶'], [2, '▶▶'], [3, '▶▶▶']] as [number, string][]) {
       const b = el('button', 'sbtn', label);
-      b.title = v === 0 ? 'Pause (Space)' : `Speed ${v}x`;
+      b.title = v === 0 ? L('Pause (Space)', 'Pause (Espace)') : L(`Speed ${v}x`, `Vitesse ${v}x`);
       b.addEventListener('click', () => actions.setSpeed(v));
       this.speedBtns.set(v, b);
       speed.append(b);
@@ -593,25 +600,25 @@ export class Hud {
     // Build menu: a panel of tool cards above a row of category buttons.
     const dock = el('div', 'dock');
     const head = el('div', 'phead');
-    this.rotateBtn.append(icon('rotate', 16), el('span', undefined, 'Rotate'));
-    this.rotateBtn.title = 'Turn the building before placing it (G, or right-click)';
+    this.rotateBtn.append(icon('rotate', 16), el('span', undefined, t('hud.rotate')));
+    this.rotateBtn.title = L('Turn the building before placing it (G, or right-click)', 'Pivoter le bâtiment avant de le poser (G ou clic droit)');
     this.rotateBtn.addEventListener('click', () => actions.rotatePlacement());
     head.append(this.panelTitle, this.hint, this.rotateBtn);
     this.panel.append(head);
-    for (const c of CATEGORIES) {
+    for (const c of this.categories) {
       if (c.id === 'bulldoze' || c.id === 'inspect') continue;
       const body = el('div', 'pbody');
       // Height and draw modes: icon buttons in a column that stays put while the cards scroll past.
       const side = el('div', 'modes-wrap');
       if (c.id === 'roads') {
         const height = el('div', 'modes');
-        height.append(el('span', 'mlabel', 'Height'));
+        height.append(el('span', 'mlabel', t('hud.height')));
         // Levels, top to bottom: three storeys up, the ground, a tunnel. + and − step between them.
-        for (const [level, label] of [[3, 'Level 3'], [2, 'Level 2'], [1, 'Level 1'], [0, 'Ground'], [-1, 'Tunnel']] as [number, string][]) {
+        for (const [level, label] of [[3, L('Level 3', 'Niveau 3')], [2, L('Level 2', 'Niveau 2')], [1, L('Level 1', 'Niveau 1')], [0, L('Ground', 'Sol')], [-1, L('Tunnel', 'Tunnel')]] as [number, string][]) {
           const b = el('button', 'mode');
           if (level > 0) { b.append(icon('bridge', 16), el('span', 'mode-level', String(level))); }
           else b.append(icon(level < 0 ? 'tunnel' : 'road', 20));
-          b.title = `${label} (+ / − to step)`;
+          b.title = L(`${label} (+ / − to step)`, `${label} (+ / − pour changer)`);
           b.setAttribute('aria-label', label);
           b.addEventListener('click', () => actions.setElevation(level));
           this.heightBtns.set(level, b);
@@ -621,11 +628,11 @@ export class Hud {
       }
       if (c.id === 'roads' || c.id === 'parks') {
         const seg = el('div', 'modes');
-        seg.append(el('span', 'mlabel', 'Draw'));
+        seg.append(el('span', 'mlabel', t('hud.draw')));
         for (const m of MODES) {
           const b = el('button', 'mode');
           b.append(icon(m.id, 20));
-          b.title = `${m.label}: ${m.hint} (C cycles)`;
+          b.title = L(`${m.label}: ${m.hint} (C cycles)`, `${m.label} : ${m.hint} (C pour changer)`);
           b.setAttribute('aria-label', m.label);
           b.addEventListener('click', () => actions.setMode(m.id));
           this.modeBtns.set(`${c.id}:${m.id}`, b);
@@ -636,7 +643,7 @@ export class Hud {
       if (c.tools.some(t => t.id === 'roundabout')) {
         // Only with the roundabout tool: which ring it draws.
         const ring = el('div', 'modes');
-        ring.append(el('span', 'mlabel', 'Ring'));
+        ring.append(el('span', 'mlabel', t('hud.ring')));
         for (const size of RING_SIZES) {
           const b = el('button', 'mode');
           b.append(icon(`ring-${size.id}`, 20));
@@ -654,8 +661,8 @@ export class Hud {
       // The brush sizes serve the land and district brushes, and the zone brush too.
       if (c.id === 'land' || c.id === 'districts' || c.id === 'zones') {
         const brush = el('div', 'modes');
-        brush.append(el('span', 'mlabel', 'Brush'));
-        for (const [size, label, ic] of [[0, 'Small brush · one cell', 'brush1'], [1, 'Medium brush · about nine cells', 'brush2'], [2, 'Large brush · about twenty-five cells', 'brush3']] as [number, string, string][]) {
+        brush.append(el('span', 'mlabel', t('hud.brush')));
+        for (const [size, label, ic] of [[0, L('Small brush · one cell', 'Petit pinceau · une case'), 'brush1'], [1, L('Medium brush · about nine cells', 'Pinceau moyen · neuf cases environ'), 'brush2'], [2, L('Large brush · about twenty-five cells', 'Gros pinceau · vingt-cinq cases environ'), 'brush3']] as [number, string, string][]) {
           const b = el('button', 'mode');
           b.append(icon(ic, 20));
           b.title = label;
@@ -684,7 +691,7 @@ export class Hud {
     }
     this.setBrush(1);
     const cats = el('div', 'cats');
-    for (const c of CATEGORIES) {
+    for (const c of this.categories) {
       const b = el('button', `cat ${c.id}`);
       b.append(icon(c.id, 24), el('span', undefined, c.label));
       b.addEventListener('click', () => {
@@ -730,15 +737,19 @@ export class Hud {
   private buildAbout(): void {
     this.about.setAttribute('role', 'dialog');
     this.about.setAttribute('aria-modal', 'true');
-    this.about.setAttribute('aria-label', 'About Gridburg');
+    this.about.setAttribute('aria-label', t('hud.about'));
     const card = el('div', 'card');
-    card.innerHTML = `
+    card.innerHTML = getLang() === 'fr' ? `
+      <h2>À propos de Gridburg</h2>
+      <p>Un petit jeu de construction urbaine autour de la circulation : tracez les routes, zonez les terrains, et regardez chaque voiture trouver son chemin en ville.</p>
+      <p>Créé par <a href="https://karakabakov.com" target="_blank" rel="noopener noreferrer">karakabakov.com</a>.</p>
+      <p class="dim">Tourne entièrement dans votre navigateur. Votre ville est sauvegardée localement et partagée par lien.</p>` : `
       <h2>About Gridburg</h2>
       <p>A small city builder about traffic: lay out the roads, zone the land, and watch every car find
       its own way across town.</p>
       <p>Built by <a href="https://karakabakov.com" target="_blank" rel="noopener noreferrer">karakabakov.com</a>.</p>
       <p class="dim">Runs entirely in your browser. Your city is saved locally and shared through a link.</p>`;
-    const close = el('button', 'menu-mini primary', 'Close');
+    const close = el('button', 'menu-mini primary', t('hud.close'));
     close.addEventListener('click', () => this.about.classList.remove('open'));
     card.append(close);
     this.about.append(card);
@@ -747,7 +758,43 @@ export class Hud {
 
   private buildHelp(): HTMLElement {
     const h = el('div', 'help');
-    h.innerHTML = `
+    h.innerHTML = getLang() === 'fr' ? `
+      <div class="card">
+        <h2>Gridburg</h2>
+        <p>Un petit jeu de construction urbaine autour de la circulation. Tout le monde arrive par l’<b>autoroute</b> au bord de la carte :
+        commencez par tirer une route depuis son extrémité, puis zonez le long de vos routes.</p>
+        <ul>
+          <li><b>Routes</b> — choisissez Rue ou Avenue, puis <b>cliquez</b> pour poser des points. <b>Droite</b> en deux clics,
+          <b>Courbe</b> en départ, coude, arrivée, et <b>Fluide</b> continue de clic en clic. <b>C</b> change de mode ;
+          clic droit ou <b>Échap</b> pour arrêter. Les croisements deviennent des carrefours</li>
+          <li><b>Accrochage</b> — les routes vont partout. Les points rejoignent les routes proches, s’accrochent aux guides en pointillés (tout droit, perpendiculaire, parallèle) et tournent par pas de 15° en longueurs de cases entières. Maintenez <b>Alt</b> pour poser librement, ou <b>G</b> avec un outil route pour l’accrochage au centre des cases</li>
+          <li><b>Voies</b> — chaque route a des voies vraiment utilisées : les voitures choisissent leur voie selon leur direction, doublent à l’arrêt, et traversent un carrefour ensemble quand leurs trajectoires ne se croisent pas. <b>Ajouter une voie</b> élargit un côté d’un tronçon (glissez le long ; Maj + glisser rétrécit). Les flèches peintes montrent le sens de chaque voie</li>
+          <li><b>Édition</b> — <b>Modifier routes (N)</b> déplace carrefours, extrémités et virages ; <b>Couper (Z)</b> retire une route ou un tronçon glissé ; <b>Élargir</b> élargit un tronçon glissé. <b>Ctrl+Z</b> annule</li>
+          <li><b>Niveaux</b> — avec une route en main, <b>+</b> et <b>−</b> règlent le niveau du prochain point : tunnel, sol, ou jusqu’à trois étages. Entre niveaux, la route devient rampe (4 cases par niveau). Les routes au même niveau se rejoignent, même en l’air ; à un niveau d’écart elles se croisent dessus ou dessous. Une route au sol sur l’eau devient un pont toute seule</li>
+          <li><b>Quatre types de routes</b> — Ruelle, Rue, Avenue et Voie rapide, par largeur, vitesse et prix croissants.
+          Rien ne se zone le long d’une voie rapide : alimentez-la par des rues ordinaires. <b>Élargir (U)</b> monte une route d’un cran</li>
+          <li><b>Circulation</b> — les voitures font vraiment la queue. Les carrefours chargés coincent ; soignez-les avec des <b>avenues</b>, des <b>feux</b>,
+          des <b>sens uniques</b> ou des <b>ronds-points</b>. Les routes rougissent où le trafic ralentit</li>
+          <li><b>Réseaux</b> suivent les routes. Les bâtiments exigent <b>électricité</b>, <b>eau</b> et <b>égouts</b> pour grandir.
+          Pompes et émissaires au bord de la rivière ; gardez la pompe en <b>amont</b> (les flèches montrent le courant)</li>
+          <li><b>Inspection</b> — cliquez un bâtiment pour voir sa couverture locale et ses blocages. Les repères orange annoncent un déclassement après 180 secondes simulées</li>
+          <li><b>Budget</b> — cliquez votre trésorerie pour régler le financement, voir les dépenses ou prendre un prêt de relance remboursable. Le privé continue de construire même en dette</li>
+          <li><b>Cases</b> — zones et bâtiments occupent des cases. Les petits bâtiments pivotent face à leur route quel qu’en soit l’angle, les grands sites restent sur la grille</li>
+          <li><b>Niveaux de ville</b> — grandissez pour gagner des subventions et débloquer des bâtiments. La pastille en haut à gauche montre niveau et bonheur ; cliquez-la pour le prochain palier et la couverture</li>
+          <li><b>Messages</b> — tout ce qui va mal s’accumule derrière la cloche en haut à droite. Chaque nouveauté surgit quelques secondes, et un clic sur un message y emmène la caméra</li>
+          <li><b>Pose</b> — clic droit, <b>G</b> ou Pivoter dans le panneau pour tourner un bâtiment avant de le poser</li>
+          <li><b>À pied</b> — <b>F</b> ou le bouton marcheur pour descendre dans les rues. <b>ZQSD</b> pour marcher, <b>Maj</b> pour courir, cliquez puis bougez la souris pour regarder, <b>Échap</b> pour remonter</li>
+          <li><b>En voiture</b> — <b>M</b> ou le bouton voiture pour conduire. <b>Z/S</b> accélérer et freiner, <b>Q/D</b> diriger, <b>Maj</b> vitesse, <b>Espace</b> frein à main, <b>V</b> place conducteur, <b>Échap</b> pour se garer</li>
+          <li><b>Services de quartier</b> — les parcs rendent heureux. Dès Village en croissance, les logements exigent dispensaire et école à proximité pour devenir appartements. Les tours se débloquent à Ville prospère et exigent les six services. Chaque équipement a capacité et portée limitées ; tous exigent des routes reliées à l’autoroute</li>
+          <li><b>Couverture</b> — choisir un service colore sa zone déjà desservie, pour placer le suivant dans un trou. Un outil transport montre les lignes du mode à la place</li>
+          <li><b>Trains</b> — deux gares se relient seules par voie aérienne le long des rues, et une gare près d’une entrée de ville ouvre aussi une ligne vers l’extérieur, qui amène et emmène des gens par train</li>
+          <li><b>Politiques</b> — des choix permanents comme le recyclage, les détecteurs ou les transports gratuits. Coûtent de l’argent chaque seconde, facture croissante avec la ville</li>
+          <li><b>Pollution</b> de l’industrie et du charbon, qui se propage dans le sol et chasse les habitants. <b>P</b> pour la voir</li>
+        </ul>
+        <p><b>Glisser gauche</b> construire · <b>Glisser droit</b> pivoter · <b>Q / E</b> pivoter · <b>ZQSD</b> déplacer · <b>Molette</b> zoom ·
+        <b>Espace</b> pause · <b>Échap</b> annuler</p>
+        <p class="dim">Votre ville est sauvegardée dans ce navigateur. Partager copie un lien contenant toute la ville. H ou clic pour fermer.</p>
+      </div>` : `
       <div class="card">
         <h2>Gridburg</h2>
         <p>A small city builder about traffic. Everyone arrives by the <b>highway</b> at the edge of the map,
@@ -799,16 +846,16 @@ export class Hud {
 
   private renderWelcome(): void {
     const pages = [
-      { icon: 'city', title: 'A patch of land. Your future metropolis.', text: 'Your goal is to grow a connected, happy city from a small settlement to 6,500 residents. Balance homes, jobs, services and your budget. Every population milestone earns a grant and new tools. There is no timer—you can keep building after reaching Metropolis.', task: 'Your first milestone: welcome 120 residents.', button: 'Show me how' },
-      { icon: 'road', title: 'Start with a connection', text: 'The highway is your link to the outside world. Extend a road from its end, then zone homes beside it. Add shops for customers and industry for jobs. Keep factories away from homes because pollution spreads.', task: 'First steps: extend the highway → zone homes → add jobs.', button: 'Next: keep the lights on' },
-      { icon: 'water', title: 'Give your neighborhoods the essentials', text: 'Build a wind turbine, a water tower, and a sewage outlet on the river bank. Utilities travel through connected roads. Keep sewage downstream of drinking-water pumps. Later, a treatment plant filters 95% of its effluent when powered.', task: 'Watch electricity, water and sewage meters at the bottom left.', button: 'Next: help your city grow' },
-      { icon: 'services', title: 'Make it a place people want to live', text: 'Parks improve happiness. As your city grows, add clinics, schools, fire protection, police and waste collection. Apartments need local healthcare and education; towers need wider services. Click a building to see exactly what is missing.', task: 'Reach milestones, reinvest grants, and check your budget before expanding.', button: 'Next: connect a bigger city' },
-      { icon: 'transport', title: 'A bigger city needs more ways to move', text: 'At 400 residents, bus stops can connect homes and jobs and you can buy new highway entrances. At 900, offices bring clean jobs. At 1,800, railway stations add elevated links along roads and metro stations add underground ones. At 3,500, build a regional airport.', task: 'Place two stops or stations with utility service. Routes form automatically.', button: 'Let’s build' },
+      { icon: 'city', title: t('tut.1.title'), text: t('tut.1.text'), task: t('tut.1.task'), button: t('tut.1.button') },
+      { icon: 'road', title: t('tut.2.title'), text: t('tut.2.text'), task: t('tut.2.task'), button: t('tut.2.button') },
+      { icon: 'water', title: t('tut.3.title'), text: t('tut.3.text'), task: t('tut.3.task'), button: t('tut.3.button') },
+      { icon: 'services', title: t('tut.4.title'), text: t('tut.4.text'), task: t('tut.4.task'), button: t('tut.4.button') },
+      { icon: 'transport', title: t('tut.5.title'), text: t('tut.5.text'), task: t('tut.5.task'), button: t('tut.5.button') },
     ];
     const page = pages[this.tutorialPage];
     const card = el('div', 'welcome-card');
     const art = el('div', 'welcome-art'); art.append(icon(page.icon, 72));
-    const count = el('p', 'welcome-step', `YOUR CITY STARTS HERE · ${this.tutorialPage + 1} / ${pages.length}`);
+    const count = el('p', 'welcome-step', `${t('tut.kicker')} · ${this.tutorialPage + 1} / ${pages.length}`);
     const row = el('div', 'welcome-actions');
     const close = (): void => {
       this.welcome.classList.remove('open');
@@ -816,9 +863,9 @@ export class Hud {
       try { localStorage.setItem('gridburg.welcome.v1', 'done'); } catch { /* optional storage */ }
       this.tutorialActions.setSpeed(this.tutorialReturnSpeed);
     };
-    const skip = el('button', 'welcome-skip', 'Skip tutorial'); skip.addEventListener('click', close);
+    const skip = el('button', 'welcome-skip', t('tut.skip')); skip.addEventListener('click', close);
     if (this.tutorialPage > 0) {
-      const back = el('button', 'welcome-skip', 'Back');
+      const back = el('button', 'welcome-skip', t('tut.back'));
       back.addEventListener('click', () => { this.tutorialPage--; this.renderWelcome(); }); row.append(back);
     }
     const next = el('button', 'welcome-next', page.button);
@@ -831,7 +878,7 @@ export class Hud {
   setTool(t: Tool): void {
     this.tool = t;
     for (const [id, b] of this.toolBtns) b.classList.toggle('active', id === t);
-    const cat = CATEGORIES.find((c) => c.tools.some((x) => x.id === t)) ?? null;
+    const cat = this.categories.find((c) => c.tools.some((x) => x.id === t)) ?? null;
     this.openCat = cat && cat.id !== 'bulldoze' && cat.id !== 'inspect' ? cat.id : null;
     for (const [id, b] of this.catBtns) b.classList.toggle('active', cat !== null && id === cat.id);
     for (const [id, body] of this.panels) body.classList.toggle('open', id === this.openCat);
@@ -848,7 +895,7 @@ export class Hud {
   }
 
   private refreshHint(): void {
-    const def = CATEGORIES.flatMap((c) => c.tools).find((x) => x.id === this.tool);
+      const def = this.categories.flatMap((c) => c.tools).find((x) => x.id === this.tool);
     if (!def) { this.hint.textContent = ''; return; }
     if (['lane', 'road', 'avenue', 'highway', 'motorway', 'highway2', 'ramp', 'parkpath'].includes(this.tool)) {
       const m = MODES.find((x) => x.id === this.mode)!;
@@ -965,7 +1012,7 @@ export class Hud {
       const unlock = id === 'office' ? OFFICE_UNLOCK : id === 'leisure' ? LEISURE_UNLOCK : ENTRY_UNLOCK;
       button.disabled = s.cityLevel < unlock;
       const note = button.querySelector('.cnote');
-      if (note) note.textContent = button.disabled ? `Level ${unlock + 1} · ${MILESTONES[unlock].population} residents` : id === 'office' ? 'Clean jobs · needs education' : id === 'leisure' ? 'Hotels, cafés, nightlife' : 'New highway access';
+      if (note) note.textContent = button.disabled ? L(`Level ${unlock + 1} · ${MILESTONES[unlock].population} residents`, `Niveau ${unlock + 1} · ${MILESTONES[unlock].population} habitants`) : id === 'office' ? L('Clean jobs · needs education', 'Emplois propres · exige éducation') : id === 'leisure' ? L('Hotels, cafés, nightlife', 'Hôtels, cafés, vie nocturne') : L('New highway access', 'Nouvel accès autoroute');
     }
     for (const [id, button] of this.toolBtns) {
       const kind = SERVICE_TOOL[id];
@@ -976,7 +1023,7 @@ export class Hud {
       const note = button.querySelector('.cnote');
       if (locked) {
         button.dataset.unlockedNote ??= note?.textContent ?? '';
-        if (note) note.textContent = `Level ${(spec.unlock ?? 0) + 1} · ${fmt(MILESTONES[spec.unlock!].population)} residents`;
+        if (note) note.textContent = L(`Level ${(spec.unlock ?? 0) + 1} · ${fmt(MILESTONES[spec.unlock!].population)} residents`, `Niveau ${(spec.unlock ?? 0) + 1} · ${fmt(MILESTONES[spec.unlock!].population)} habitants`);
       } else if (note && button.dataset.unlockedNote !== undefined) note.textContent = button.dataset.unlockedNote;
     }
     this.money.textContent = '$' + fmt(s.money);
@@ -990,7 +1037,7 @@ export class Hud {
     this.jobs.textContent = fmt(s.jobs);
     this.commute.textContent = s.commute > 0 ? s.commute.toFixed(0) + 's' : '–';
     this.commute.classList.toggle('neg', s.commute > 40);
-    this.cars.textContent = `${s.cars} cars`;
+    this.cars.textContent = L(`${s.cars} cars`, `${s.cars} voitures`);
     for (const k of ['power', 'water', 'sewage'] as const) {
       const [used, cap] = s[k];
       this.util[k].textContent = `${fmt(used)} / ${fmt(cap)}`;
@@ -1047,7 +1094,7 @@ export class Hud {
     this.showing = new Set(messages.map(m => m.text));
     this.messageList.replaceChildren(...(messages.length
       ? messages.map(m => this.messageRow(m))
-      : [el('p', 'pnote', 'Nothing needs your attention.')]));
+      : [el('p', 'pnote', L('Nothing needs your attention.', 'Rien ne demande votre attention.'))]));
     this.messageDot.textContent = messages.length ? String(messages.length) : '';
     this.messageDot.classList.toggle('on', messages.length > 0);
     this.messageBtn.classList.toggle('attention', messages.length > 0);
@@ -1063,7 +1110,7 @@ export class Hud {
     const row = el('button', 'message', m.text);
     row.addEventListener('click', () => {
       if (this.messageActions.focusOn(m.id)) this.messagePop.classList.remove('show');
-      else this.toast('Nothing to show for that one yet');
+      else this.toast(L('Nothing to show for that one yet', 'Rien à montrer pour l’instant'));
     });
     return row;
   }

@@ -50,6 +50,7 @@ import { demoCity } from './demo';
 import { clearLocal, loadFromHash, loadLocal, saveLocal, shareUrl } from './save';
 import { MainMenu, loadSettings, saveSettings } from './ui/menu';
 import type { Settings } from './ui/menu';
+import { setLang } from './i18n';
 import { setDayLength } from './render/daylight';
 import { GRID, MAX_CARS, N_TILES, RES_POP, SERVICES, isZone } from './constants';
 import { HALF_WIDTH, Network } from './roads/network';
@@ -640,6 +641,7 @@ let playing = false;
 let resumeSpeed = 1;
 
 function applySettings(s: Settings): void {
+  setLang(s.lang);
   buildings.setDetail(s.visualDetail);
   landscape.setDetail(s.visualDetail);
   cars.setDetail(s.visualDetail);

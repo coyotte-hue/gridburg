@@ -1,5 +1,7 @@
 # Gridburg
 
+*Version française : voir [README.fr.md](README.fr.md). — Ce fork ajoute le français (menu, tutoriel, aide et interface) avec détection automatique et sélecteur dans Réglages → Langue.*
+
 A small 3D city builder that runs in a browser tab. The thing that matters most is traffic.
 
 A motorway runs across the edge of every map, one carriageway each way, with two interchanges already built. Draw

@@ -1,6 +1,7 @@
 import { visualDetail, type VisualDetail } from '../render/detail';
 import { icon } from './icons';
 import { deleteSlot, listSlots } from '../slots';
+import { applyLang, detectLang, getLang, setLang, t, type Lang } from '../i18n';
 
 export interface Settings {
   shadows: boolean;
@@ -9,9 +10,10 @@ export interface Settings {
   autosave: boolean;
   infiniteMoney: boolean;
   disasters: boolean;
+  lang: Lang;
 }
 
-export const DEFAULT_SETTINGS: Settings = { shadows: true, visualDetail: 1, dayLength: 480, autosave: true, infiniteMoney: false, disasters: true };
+export const DEFAULT_SETTINGS: Settings = { shadows: true, visualDetail: 1, dayLength: 480, autosave: true, infiniteMoney: false, disasters: true, lang: detectLang() };
 
 const KEY = 'gridburg.settings.v1';
 
@@ -20,6 +22,8 @@ export function loadSettings(): Settings {
     const raw = localStorage.getItem(KEY);
     const settings = raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) as Partial<Settings> } : { ...DEFAULT_SETTINGS };
     settings.visualDetail = visualDetail(settings.visualDetail);
+    if (settings.lang !== 'fr' && settings.lang !== 'en') settings.lang = detectLang();
+    applyLang(settings.lang);
     return settings;
   } catch { return { ...DEFAULT_SETTINGS }; }
 }
@@ -72,7 +76,7 @@ export class MainMenu {
     this.root.setAttribute('aria-label', 'Main menu');
     const card = el('div', 'menu-card');
     const title = el('div', 'menu-title');
-    title.append(el('h1', undefined, 'Gridburg'), el('p', 'menu-sub', 'Lay out the roads, zone the land, and grow a city.'));
+    title.append(el('h1', undefined, 'Gridburg'), el('p', 'menu-sub', t('menu.subtitle')));
     card.append(title, this.panels);
     this.root.append(card);
     host.append(this.root);
@@ -104,24 +108,24 @@ export class MainMenu {
     const page = el('div', 'menu-page');
     this.resumeBtn.append(icon('play', 20));
     const resumeText = el('span', 'menu-label');
-    resumeText.append(el('strong', undefined, 'Resume'), el('span', 'menu-note', 'Back to your city'));
+    resumeText.append(el('strong', undefined, t('menu.resume')), el('span', 'menu-note', t('menu.resumeHint')));
     this.resumeBtn.append(resumeText);
     this.resumeBtn.addEventListener('click', () => this.actions.resume());
 
     this.continueBtn.append(icon('city', 20));
     const continueText = el('span', 'menu-label');
-    continueText.append(el('strong', undefined, 'Continue'), this.continueNote);
+    continueText.append(el('strong', undefined, t('menu.continue')), this.continueNote);
     this.continueBtn.append(continueText);
     this.continueBtn.addEventListener('click', () => this.actions.continueCity());
 
     page.append(
       this.resumeBtn,
       this.continueBtn,
-      this.button('New city', 'A fresh river valley to build on', () => { this.seed = randomSeed(); this.seedField.value = String(this.seed); this.show('new'); }, 'plus'),
-      this.button('Demo city', 'A finished city to look around', () => this.actions.demoCity(), 'city'),
-      this.button('Saved cities', 'Cities you saved by name', () => { this.buildSlots(); this.show('slots'); }, 'save'),
-      this.button('Settings', 'Graphics, day length and cheats', () => this.show('settings'), 'menu'),
-      this.button('How to play', 'The basics, in five steps', () => this.actions.help(), 'help'),
+      this.button(t('menu.new'), t('menu.newHint'), () => { this.seed = randomSeed(); this.seedField.value = String(this.seed); this.show('new'); }, 'plus'),
+      this.button(t('menu.demo'), t('menu.demoHint'), () => this.actions.demoCity(), 'city'),
+      this.button(t('menu.saved'), t('menu.savedHint'), () => { this.buildSlots(); this.show('slots'); }, 'save'),
+      this.button(t('menu.settings'), t('menu.settingsHint'), () => this.show('settings'), 'menu'),
+      this.button(t('menu.help'), t('menu.helpHint'), () => this.actions.help(), 'help'),
     );
     this.pages.set('home', page);
     this.panels.append(page);
@@ -129,23 +133,23 @@ export class MainMenu {
 
   private buildNew(): void {
     const page = el('div', 'menu-page');
-    page.append(el('h2', 'menu-heading', 'New city'));
-    page.append(el('p', 'menu-note', 'Every seed lays out a different river valley. Keep one you like by noting its number.'));
+    page.append(el('h2', 'menu-heading', t('menu.newCity')));
+    page.append(el('p', 'menu-note', t('menu.seedNote')));
 
     const seedRow = el('div', 'menu-row');
     this.seedField.type = 'text';
     this.seedField.inputMode = 'numeric';
     this.seedField.value = String(this.seed);
-    this.seedField.setAttribute('aria-label', 'Map seed');
-    const dice = el('button', 'menu-mini', 'Random');
+    this.seedField.setAttribute('aria-label', t('menu.seed'));
+    const dice = el('button', 'menu-mini', t('menu.random'));
     dice.addEventListener('click', () => { this.seed = randomSeed(); this.seedField.value = String(this.seed); });
-    seedRow.append(el('span', 'menu-note', 'Seed'), this.seedField, dice);
+    seedRow.append(el('span', 'menu-note', t('menu.seed')), this.seedField, dice);
     page.append(seedRow);
 
     const actions = el('div', 'menu-row end');
-    const back = el('button', 'menu-mini', 'Back');
+    const back = el('button', 'menu-mini', t('menu.back'));
     back.addEventListener('click', () => this.show('home'));
-    const start = el('button', 'menu-mini primary', 'Start city');
+    const start = el('button', 'menu-mini primary', t('menu.start'));
     start.addEventListener('click', () => {
       const typed = Number.parseInt(this.seedField.value, 10);
       this.actions.newCity(Number.isFinite(typed) ? typed >>> 0 : this.seed);
@@ -158,7 +162,7 @@ export class MainMenu {
 
   private back(): HTMLElement {
     const row = el('div', 'menu-row end');
-    const back = el('button', 'menu-mini', 'Back');
+    const back = el('button', 'menu-mini', t('menu.back'));
     back.addEventListener('click', () => this.show('home'));
     row.append(back);
     return row;
@@ -166,13 +170,13 @@ export class MainMenu {
 
   private buildSlots(): void {
     const page = this.slotsPage;
-    page.replaceChildren(el('h2', 'menu-heading', 'Saved cities'));
+    page.replaceChildren(el('h2', 'menu-heading', t('menu.savedTitle')));
     const slots = listSlots();
-    if (!slots.length) page.append(el('p', 'menu-note', 'Nothing saved yet. In a city, open the menu and choose “Save or load cities”.'));
+    if (!slots.length) page.append(el('p', 'menu-note', t('menu.savedEmpty')));
     for (const slot of slots) {
       const row = el('div', 'menu-row');
-      const load = this.button(slot.name, `${slot.population.toLocaleString()} residents · day ${slot.day} · ${new Date(slot.savedAt).toLocaleDateString()}`, () => this.actions.loadSlot(slot.name), 'city');
-      const del = el('button', 'menu-mini', 'Delete');
+      const load = this.button(slot.name, `${slot.population.toLocaleString(getLang() === 'fr' ? 'fr-FR' : 'en-US')} ${t('hud.residents')} · ${t('menu.dayWord')} ${slot.day} · ${new Date(slot.savedAt).toLocaleDateString(getLang() === 'fr' ? 'fr-FR' : 'en-US')}`, () => this.actions.loadSlot(slot.name), 'city');
+      const del = el('button', 'menu-mini', t('menu.delete'));
       del.addEventListener('click', () => { if (confirm(`Delete “${slot.name}”?`)) { deleteSlot(slot.name); this.buildSlots(); } });
       row.append(load, del);
       page.append(row);
@@ -194,13 +198,33 @@ export class MainMenu {
 
   private buildSettings(): void {
     const page = el('div', 'menu-page');
-    page.append(el('h2', 'menu-heading', 'Settings'));
+    page.append(el('h2', 'menu-heading', t('menu.settingsTitle')));
+    // Language first: switching it saves and reloads so the whole UI rebuilds.
+    const langRow = el('label', 'menu-setting');
+    const langText = el('span', 'menu-label');
+    langText.append(el('strong', undefined, t('menu.language')), el('span', 'menu-note', t('menu.languageHint')));
+    const langSelect = el('select', 'menu-select') as HTMLSelectElement;
+    langSelect.setAttribute('aria-label', t('menu.language'));
+    for (const [value, label] of [['fr', 'Français'], ['en', 'English']] as [Lang, string][]) {
+      const option = el('option', undefined, label) as HTMLOptionElement;
+      option.value = value;
+      langSelect.append(option);
+    }
+    langSelect.value = this.settings.lang;
+    langSelect.addEventListener('change', () => {
+      this.settings.lang = langSelect.value as Lang;
+      setLang(this.settings.lang);
+      this.commit();
+      location.reload();
+    });
+    langRow.append(langText, langSelect);
+    page.append(langRow);
     const detailRow = el('label', 'menu-setting');
     const detailText = el('span', 'menu-label');
-    detailText.append(el('strong', undefined, 'Visual detail'), el('span', 'menu-note', 'Buildings, trees and vehicles. Low favors speed; High adds finer details. Applies immediately.'));
+    detailText.append(el('strong', undefined, t('menu.visual')), el('span', 'menu-note', t('menu.visualHint')));
     const detailSelect = el('select', 'menu-select');
-    detailSelect.setAttribute('aria-label', 'Visual detail');
-    for (const [value, label] of [[0, 'Low'], [1, 'Balanced'], [2, 'High']] as const) {
+    detailSelect.setAttribute('aria-label', t('menu.visual'));
+    for (const [value, label] of [[0, t('menu.low')], [1, t('menu.balanced')], [2, t('menu.high')]] as const) {
       const option = el('option', undefined, label);
       option.value = String(value);
       detailSelect.append(option);
@@ -209,16 +233,16 @@ export class MainMenu {
     detailSelect.addEventListener('change', () => { this.settings.visualDetail = visualDetail(Number(detailSelect.value)); this.commit(); });
     detailRow.append(detailText, detailSelect);
     page.append(detailRow);
-    page.append(this.toggle('Shadows', 'Turn off for more speed on weak hardware', () => this.settings.shadows, v => { this.settings.shadows = v; }));
-    page.append(this.toggle('Save automatically', 'Keeps your city in this browser', () => this.settings.autosave, v => { this.settings.autosave = v; }));
-    page.append(this.toggle('Disasters', 'Floods and tornadoes, from Small town on', () => this.settings.disasters, v => { this.settings.disasters = v; }));
-    page.append(this.toggle('Infinite money', 'Building is free and the treasury stays full', () => this.settings.infiniteMoney, v => { this.settings.infiniteMoney = v; }));
+    page.append(this.toggle(t('menu.shadows'), t('menu.shadowsHint'), () => this.settings.shadows, v => { this.settings.shadows = v; }));
+    page.append(this.toggle(t('menu.autosave'), t('menu.autosaveHint'), () => this.settings.autosave, v => { this.settings.autosave = v; }));
+    page.append(this.toggle(t('menu.disasters'), t('menu.disastersHint'), () => this.settings.disasters, v => { this.settings.disasters = v; }));
+    page.append(this.toggle(t('menu.money'), t('menu.moneyHint'), () => this.settings.infiniteMoney, v => { this.settings.infiniteMoney = v; }));
 
     const row = el('label', 'menu-setting');
     const text = el('span', 'menu-label');
-    text.append(el('strong', undefined, 'Day length'), el('span', 'menu-note', 'How long a day and night takes'));
+    text.append(el('strong', undefined, t('menu.day')), el('span', 'menu-note', t('menu.dayHint')));
     const select = el('select', 'menu-select') as HTMLSelectElement;
-    for (const [label, seconds] of [['Quick · 4 min', 240], ['Normal · 8 min', 480], ['Long · 16 min', 960], ['Always day', 1e9]] as [string, number][]) {
+    for (const [label, seconds] of [[t('menu.quick'), 240], [t('menu.normal'), 480], [t('menu.long'), 960], [t('menu.alwaysDay'), 1e9]] as [string, number][]) {
       const option = el('option', undefined, label) as HTMLOptionElement;
       option.value = String(seconds);
       select.append(option);
@@ -229,7 +253,7 @@ export class MainMenu {
     page.append(row);
 
     const actions = el('div', 'menu-row end');
-    const back = el('button', 'menu-mini', 'Back');
+    const back = el('button', 'menu-mini', t('menu.back'));
     back.addEventListener('click', () => this.show('home'));
     actions.append(back);
     page.append(actions);
@@ -246,7 +270,7 @@ export class MainMenu {
   setSave(info: SaveInfo | null, running: boolean): void {
     this.continueBtn.hidden = !info;
     this.resumeBtn.hidden = !running;
-    if (info) this.continueNote.textContent = `${info.population.toLocaleString()} residents · day ${info.day}`;
+    if (info) this.continueNote.textContent = `${info.population.toLocaleString(getLang() === 'fr' ? 'fr-FR' : 'en-US')} ${t('hud.residents')} · ${t('menu.dayWord')} ${info.day}`;
   }
 
   setOpen(open: boolean): void {

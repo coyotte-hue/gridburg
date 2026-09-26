@@ -1,465 +1,216 @@
 # Gridburg
 
-*Version française : voir [README.fr.md](README.fr.md). — Ce fork ajoute le français (menu, tutoriel, aide et interface) avec détection automatique et sélecteur dans Réglages → Langue.*
+*Read this in English: [README.en.md](README.en.md). — Ce fork ajoute le **français** dans le jeu (menu, tutoriel, aide et interface, avec détection automatique et sélecteur dans Réglages → Langue).*
 
-A small 3D city builder that runs in a browser tab. The thing that matters most is traffic.
+Un petit jeu de construction de ville en 3D, dans un onglet de navigateur. La seule chose qui compte vraiment : la circulation.
 
-A motorway runs across the edge of every map, one carriageway each way, with two interchanges already built. Draw
-roads out from an interchange, zone beside them, and the city grows on its own. Cars commute over your roads and queue for real, so busy junctions jam until you
-fix them. Keep the lights on, the water clean, and the factories away from the houses.
+Une autoroute longe le bord de chaque carte, une chaussée par sens, avec deux échangeurs déjà construits. Tirez des routes depuis un échangeur, zonez le long, et la ville grandit toute seule. Les voitures font leurs trajets domicile-travail sur vos routes et font vraiment la queue : les carrefours chargés coincent jusqu'à ce que vous les soigniez. Gardez la lumière allumée, l'eau propre, et les usines loin des maisons.
 
-**Play:** https://gorgekara.github.io/gridburg/
+**Jouer :** https://coyotte-hue.github.io/gridburg/
 
-## Streets and custom parks
+## Langue
 
-- Ordinary surface junctions have pedestrian crossings. Roundabout islands have flower beds, trees and fountains; the river has translucent shallows over a gravel bed.
-- **Roads → Bike lanes** upgrades a surface street or avenue for $12 per cell. Click again to remove. Bike lanes sit outside motor lanes; narrow lanes, expressways, structures and roundabouts are excluded. Cyclists ride the tracks in both directions; they are scenery rather than simulated trips.
-- **Parks** lets you compose parks from paths, lawns, plazas, ponds and kiosks. Drag paths, lawns or plazas to paint; paths join neighbouring pieces automatically. **Decorations** adds trees, flowers, benches and fountains. Pieces can be rotated, replaced or bulldozed and are saved with your city. Connect walkable park pieces to a road to activate nearby amenities' recreation coverage. Kiosks are recreation amenities rather than commercial zones.
-- **Transport → Trolleybus stop** creates electric road transit between operating stops on connected surface streets and avenues. Stops need utilities and two-way routes. Overhead wires follow the routes, trolleybuses obey traffic, and ridership appears in the overview. Narrow lanes, expressways, roundabouts, bridges and tunnels cannot carry trolley routes.
-- Airports reserve a one-cell perimeter and three-cell-wide flight corridors extending twelve cells beyond either runway end. Rotate an airport to aim its approach. New buildings and zoning cannot obstruct these areas; saved buildings remain intact. Amber placement shading shows the clearance.
+Le jeu existe en **français** et en **anglais**. La langue est détectée automatiquement (navigateur en français → jeu en français) et se change dans **Menu → Réglages → Langue**. Traduits : menu principal, tutoriel de bienvenue, aide, catégories et outils de construction, budget, politiques municipales, paliers de ville, services et besoins. Les messages détaillés de simulation (inspecteur, alertes) restent en anglais pour l'instant.
 
-## Economy, districts and the wider world
+## Rues et parcs personnalisés
 
-- **Land value.** Every cell has a value from 0 to 100: parks, a river view, transit stops, landmarks and good services raise it; pollution, noise, crime and uncollected rubbish lower it. Better addresses pay more tax, grow faster, and towers need a land value of at least 30.
-- **Goods.** Factories and farms make goods, shops and offices use them. The surplus is exported through the city's entrances, intercity rail, docks and the airport (up to their capacity) and earns money; a shortfall is imported, which eats into shop takings and raises industrial demand. Vans deliver round town and lorries carry exports away.
-- **Tourism.** Leisure zones, parks, landmarks and the waterfront draw visitors, brought in by entrances, trains and the airport. Tourism appears in the budget and pushes commercial demand up. The **Observation tower** (Parks, from City) is a landmark that draws sixty visitors a minute.
-- **Tax per zone.** The budget has a rate each for homes, shops, industry and offices (farms pay the industrial rate, leisure the commercial one), plus a slider that sets them all.
-- **Rubbish.** Buildings put out rubbish every second. Recycling centres send garbage trucks to the fullest bins nearby; rubbish nobody collects lowers land value, and at its worst knocks buildings down a level.
-- **Deathcare and post.** Cemeteries, crematoria and post offices (Services, from Thriving town). Once the city is a City, new towers need 30% deathcare and post coverage.
-- **Power and water follow the roads.** Each connected road network shares only its own power plants, pumps and outlets, so a neighbourhood cut off from the grid goes dark.
-- **Districts.** Paint up to eight named districts (Districts menu) with the same round brush as the land tools, in three sizes, and give each its own policies: high-rise ban, quiet streets, green district, tourist quarter, tax break or neighbourhood watch. Local policies are billed per building.
-- **Land.** A paintbrush in three sizes (Land menu) and three tools: **Lower** takes the ground down a storey with every pass (a hill comes down, then you dig in, up to three storeys, the river bed too), **Raise** brings it up (a hole or the river is filled to buildable land, then earth piles into hills up to four storeys), and **Flatten** puts any cell back to bank level. Forests climb raised ground; nothing can be built or driven on it. Earth can be piled into the river too, so digging a new channel and raising the old bed moves the river, or a wall of it dams the river outright.
-- **Water that moves.** The river rises on the map itself, a stream a cell wide a little way in from one edge, and gathers water along its upper course until it runs off the far edge as a river a few cells wide, tipping over a waterfall into a gorge where it leaves the map and carrying on through the hills to the horizon. It is simulated as water on the ground, down a gently falling bed. Dam it and the water gathers behind the dam, rises up the banks and spreads over the land until it finds another way down, wrecking what it covers; take the dam out and it drains again. A flood disaster is a surge down the river that overtops the low banks. Flood barriers raise the ground they guard so the water goes elsewhere. Dig a basin (a storey deeper with each pass, up to three, and the river bed itself can be dug deeper) and groundwater fills it into a lake; dig a channel from the bank and the river runs along it, so a channel plus a dam on the old bed moves the river. Dug ground is cut into the land as a real pit, with earth walls and a gravel floor.
-- **Disasters.** From Small town, the river occasionally floods the low ground beside it and tornadoes cross the valley, knocking buildings down a level or two. Flood barriers on the bank protect everything within seven cells. Switch disasters off in Settings.
-- **Map views.** Land value, well-being, noise, crime, rubbish, districts and flood risk, from the layers button.
-- **Statistics.** Charts of population, treasury, income, happiness, land value, visitors and demand since the city was loaded.
-- **Undo.** Ctrl+Z (or the undo button) takes back the last edit and refunds it, up to thirty steps.
-- **Saved cities.** Save and load named cities from the menu, beside the autosave.
-- **Achievements.** Twenty-two, from the first family moving in to a World city, remembered in this browser.
-- **Two more milestones.** Megalopolis at 10,000 residents and World city at 15,000, each with a grant.
-- **Sound.** A city hum that follows the traffic, birdsong by day and crickets at night, sirens while emergency services are out, building and bulldozing cues, an engine when driving and footsteps when walking. All synthesised; toggle it from the speaker button.
-- **Touch.** On phones and tablets one finger pans and two pinch and turn (one finger draws while a tool is in hand), and walking and driving get an on-screen joystick.
+- Les carrefours ordinaires ont des passages piétons. Les îlots de ronds-points ont massifs, arbres et fontaines ; la rivière a des hauts-fonds translucides sur lit de gravier.
+- **Routes → Pistes cyclables** améliore une rue ou une avenue pour 12 $ par case. Recliquez pour retirer. Les pistes longent les voies hors chaussées ; ruelles, voies rapides, ouvrages et ronds-points exclus. Les cyclistes roulent dans les deux sens ; c'est du décor, pas des trajets simulés.
+- **Parcs** : composez des parcs avec allées, pelouses, esplanades, étangs et kiosques. Glissez allées, pelouses ou esplanades pour peindre ; les allées rejoignent automatiquement leurs voisines. **Décorations** ajoute arbres, fleurs, bancs et fontaines. Les pièces pivotent, se remplacent ou se rasent, et sont sauvegardées avec votre ville. Reliez les pièces praticables à une route pour activer la couverture loisirs des équipements voisins. Les kiosques sont des équipements de loisirs, pas des zones commerciales.
+- **Transports → Arrêt de trolleybus** crée du transport routier électrique entre arrêts en service sur rues et avenues connectées. Les arrêts exigent réseaux et lignes dans les deux sens. Les caténaires suivent les lignes, les trolleybus respectent la circulation, et la fréquentation apparaît dans la vue d'ensemble. Ruelles, voies rapides, ronds-points, ponts et tunnels exclus.
+- Les aéroports réservent un périmètre d'une case et des corridors de vol de trois cases de large sur douze cases au-delà de chaque bout de piste. Pivotez un aéroport pour orienter son approche. Ni bâtiments ni zonage ne peuvent obstruer ces zones ; les bâtiments sauvegardés restent intacts. Un ombrage orange montre le dégagement.
 
-## What is in it
+## Économie, quartiers et monde extérieur
 
-- **A main menu.** Continue your saved city, start a new one, load the demo, or change settings.
-- **The demo city.** A city of some twenty thousand filling the whole map: an old town on a street grid with a downtown of shops and offices round a roundabout, industry behind a green belt, suburbs, a riverside park on the peninsula inside the river's loop, and a new town across three bridges with farms, industry and the airport. Rail, metro, buses and taxis run, and the river leaves the map over a waterfall.
-  The HUD menu button reopens it in game and pauses. Settings cover visual detail (Low, Balanced or High), shadows, day length, autosaving and the
-  infinite money cheat, and they persist in the browser. Visual detail changes apply immediately: Low simplifies buildings, trees and vehicles; Balanced keeps moderate detail; High adds shutters, flower boxes, roof seams, balconies, roof terraces, shop displays, denser foliage and vehicle trim.
-- **Six silhouettes per building type.** Shops, blocks, offices and towers come in six shapes and
-  palettes each, from two-storey brick parades to glass towers, so a commercial street is a mix of
-  heights and colours rather than a wall of the same block. Offices and towers carry a company logo,
-  and after dark their floors light up in cool white alongside the warm windows of homes.
-- **Seeded river valleys.** Every seed lays out a different river, hills and highway entry, and you
-  can type a seed in when starting a city.
-- **Freeform roads, placed with clicks like Cities: Skylines.** Straight (two clicks), Curved (start, bend,
-  end) or Smooth (every click continues the road as a flowing curve). Crossings become junctions
-  automatically, endpoints snap to existing roads, and roads over water become bridges.
-- **Roads go anywhere, Trafficity-style.** There is no grid to snap to: a point joins a nearby road,
-  otherwise catches on dashed guides drawn out of the roads around it (straight on from a dead end,
-  square to a road, parallel to one from where you started, or where two guides cross), and otherwise
-  turns in 15° steps with whole-cell lengths. The tooltip names the snap along with the price. Hold
-  **Alt** to put a point exactly where the pointer is, or press **G** with a road tool for the old
-  tile-centre snap.
-- **Lanes that carry traffic.** Every road has lanes each way (a street one, an avenue two, an
-  expressway three) and traffic really uses them. Cars choose the lane for their next turn, change
-  lanes to get by a stopped car, and cross a junction together whenever their paths do not cross, so
-  a wider road carries more (an avenue crossing moves nearly three times the traffic it did when
-  junctions took one car at a time). **Add lane** widens one side of any stretch: drag along the
-  side you want, click for the whole road, hold Shift to take a lane away. The widening tapers in and
-  out, and one that ends at a junction becomes a turn pocket. Turn lanes are worked out
-  automatically and painted with arrows; drivers line up for a pocket before they reach it.
-- **Stacked levels.** Every road point sits on a level: a tunnel below ground, the ground, or one,
-  two or three storeys up. Press **+** or **−** while drawing to set the level of the next point; a
-  stretch between two levels becomes a ramp (it needs four cells per level). Roads meet wherever
-  they cross at the same level on the flat, up in the air too, so elevated junctions and stacked
-  interchanges are drawn by hand; a whole level apart they pass over or under each other, and
-  anything closer is refused. Decks stand on piers placed from the road's own profile, never on the
-  road beneath, elevated junctions get a slab and column of their own, and a tunnel's portal stands
-  wherever it dips below ground. Old bridges and tunnels keep working as before.
-- **Traffic signals you design yourself.** A signal runs a plan of phases, and in each phase every
-  movement through the junction (from one road into another) is green, green but giving way, or red.
-  A new signal starts from a sensible plan: at a crossroads opposite roads go together with left turns
-  giving way, at a T the through road goes first and then the side road. Click a signalised junction
-  with the Signal tool to open the editor: its phases with their green times, and arrows over the
-  junction for every movement, coloured by what the selected phase shows; click an arrow to cycle it.
-  Add, remove and retime phases, or turn on **adaptive** timing, which cuts a phase nobody is using
-  and stretches a busy one up to twice its green. Turners waiting on a give-way green go at the end of
-  it, the lamps show each approach's real state, and fire engines and police still go through on red.
-- **Edit roads after you build them.** **Edit roads (N)** drags a junction or road end somewhere else:
-  the roads on it follow, keep their curves, merge into a node you drop them on and form junctions
-  with whatever they now cross. Drag the middle of a road to bend it. **Cut (Z)** removes a road up to
-  the next junctions on a click, or just the stretch you drag along. **Upgrade** still widens a whole
-  road on a click, and a drag changes only that stretch. Every edit previews live with its price,
-  the buildings it would pave over and anything that stops it (hills, the river, a bridge too short),
-  charges only for road it adds, and comes back with Ctrl+Z.
-- **Four road types.** Lanes ($14/cell, one shared carriageway), streets ($25, two lanes), avenues
-  ($180, four lanes) and expressways ($430, six lanes, fastest, but nothing can be zoned along them).
-  Every kind sits inside its corridor with a verge either side. Upgrade widens a road one step and
-  charges the difference; keep clicking and it wraps back to a lane. Extra city entrances arrive on
-  expressway; the map's own motorway comes with interchanges to build from.
-- **A motorway past the map.** Every new map has a motorway passing the city by just outside its
-  roomier edge: two one-way carriageways side by side, traffic arriving from both ends. A **two-lane
-  highway** leaves it at a **full cloverleaf**, also outside the map and laid out like the real thing
-  (four loops for the left turns, four wide arcs for the right), and comes onto the map a few cells
-  before it simply stops, each carriageway ending on its own: those two stubs are the only ground the
-  highways take, and the city is built out from them, one for traffic arriving and one for traffic leaving. Traffic from outside arrives on both highways. Traffic passing through the region rolls along
-  the motorway from one end of the map to the other without ever turning off. The motorway and its interchanges cannot be bulldozed
-  and cost nothing to keep. Helicopters take to the air once the town is a City.
-- **Highways the Cities: Skylines 2 way.** Besides the two-way expressway there is a **one-way highway**
-  ($240/cell, three lanes), a **two-lane highway** ($170/cell) and a **highway ramp** ($110/cell, one lane). Both run in the direction you
-  draw them: lay one carriageway, then the other beside it, and join them to the streets with ramps.
-  Start a ramp on a highway for an exit, end it on one for an on-ramp, and press + or − while drawing to
-  take it over or under the other roads. Where a ramp splits from or joins a carriageway, traffic merges
-  on the move instead of stopping at a junction; a level crossing of two highways still takes turns.
-  None of them has frontage, pavements or parking. Upgrade walks a ramp up to the two-lane highway, then the motorway, and back.
-  A slip road behaves like an added lane: the gore between it and the carriageway is paved, the
-  carriageway's edge line opens for the mouth, and cars drift into the outer lane before they exit
-  and ease over from it after they join. Every junction has rounded kerb corners, and lamps, signals,
-  stop signs, signs, furniture and parked cars are all kept off the carriageway.
-- **More traffic control.** Signals and roundabouts, plus all-way stop signs ($60 a junction) and
-  traffic calming ($45/cell) that halves a street's speed and all but ends collisions on it. The
-  roundabout tool offers four rings, picked beside the cards: one matched to the widest road that
-  meets it, a small single-lane circle ($900), a two-lane one ($1,350) or a grand two-lane circle
-  ($2,160) for the busiest crossings.
-- **Turn a building before you place it.** Right-click, press G, or use the Rotate button in the tool
-  panel. Rectangular sites like the railway station turn with it, and the facing is saved.
-- **Robberies, street racing and helicopters.** From City level a robbery occasionally hits a shop or
-  office; the nearest police station answers the alarm, and a crew that is left alone for ninety
-  seconds gets away with $1,200. After dark, street racers run long routes across town at speed.
-  Helicopters circle overhead and drift across to whatever is going on.
-- **Alleys.** A building standing behind the row that fronts the street gets a service alley out to the
-  curb, threaded between its neighbours. Fire engines and patrol cars answer calls there as usual.
-- **Dry land only.** The river is drawn a little wider than the tile mask that decides what is water, so
-  the strip either side counts as shore: nothing may be zoned or built there and no empty lot fills in.
-  Waterside works are the exception — a pump, an outlet or a treatment plant belongs on the bank.
-- **City messages.** Problems gather behind the bell in the top-right corner with a count; each new one
-  pops out for a few seconds, clicking the bell lists everything outstanding, and clicking a message
-  takes the camera to what it is about.
-- **Traffic management.** Signals, one-way streets, and roundabouts. Uncontrolled junctions let one car
-  through at a time; signals move a whole approach at once; roundabouts never stop. A ring takes its
-  size from the widest road that meets it, from a 1.5-cell lane circle to a 2.6-cell avenue one; an
-  expressway arriving at a roundabout meets an avenue-sized ring rather than a six-lane circle.
-- **Multiple highway entries.** The starting entry is free; Small town unlocks new $3,500 entrances on clear map edges. Each adds a seven-cell avenue. Any entry can serve its connected neighborhoods, and regional drivers choose a reachable entrance.
-- **Traffic from outside arrives by road.** Every entrance carries on sixteen cells past the map edge.
-  Regional traffic is created and retired out there and drives in, so cars never appear on the doorstep and
-  the queue to leave forms off the map instead of across the entrance.
-- **City policies.** Six standing decisions — recycling, smoke alarms, neighborhood watch, study grants,
-  free public transport and a congestion charge — each paid for every second, with a bill that grows with
-  the city. They change pollution, incidents, school reach, transit ridership and how many people drive.
-- **Bigger services as the city grows.** A 2 x 2 hospital at Thriving town and a 3 x 2 city hospital at
-  Regional capital extend healthcare well past a clinic's reach; police headquarters at City covers a
-  wider district and keeps two patrol cars out at once.
-- **Parks for every size of city.** Neighborhood parks from the start, playgrounds at Growing village,
-  a two-cell sports field at Thriving town and a three-cell city park with a pond at City.
-- **Railways that connect themselves.** Two stations link up by elevated track along the road
-  corridors, and a station within thirty cells of a city entrance also runs a service out of town, so
-  some people arrive and depart by train rather than by road.
-- **Route maps.** Picking a transport tool lights up that mode's lines through the streets, its stops
-  and a marker running each route, the way the metro tool shows its tunnels.
-- **Service coverage at a glance.** Selecting a service paints the area existing buildings of that sort
-  already reach, so the next clinic, station or bus stop goes where the gap is.
-- **Walk the streets.** Press F, or the walker button in the top-right corner, to step down to street
-  level wherever you are looking. W A S D walks, Shift runs, and the mouse looks around (click once to
-  capture it). Buildings, gardens and the river stop you, but streets, alleys and parks are open.
-  Esc or F takes you back up to the map where you left it. People walk the pavements (more as the
-  city grows, fewer late at night), and at street level the kerbs fill with benches, bins, hydrants,
-  street trees, bike racks, planters, post boxes, bollards and a shelter at every bus stop. Cars park
-  along the kerbs of streets and avenues in front of built lots, half up on the pavement so the lanes
-  stay free, and clear of junctions, crossings, roundabouts and bike tracks. You can
-  walk up the ramps and over bridges.
-- **Detail from above.** Zoom in over the town and the same detail streams in round the point you
-  are looking at, along with the rooftops: plant rooms and air handlers, vents and extract fans,
-  conduit, water tanks on stilts, dishes and aerials, roof gardens and washing lines on the flats,
-  solar arrays, masts and helipads on the towers, billboards on the shops, skylights on the sheds, a
-  railing and a stair housing on anything tall. Empty zoned lots are building sites: churned earth,
-  hoardings, a site cabin, bricks and sand, scaffolding or a dug foundation, and sometimes a tower
-  crane. Shopping streets get newsstands, food carts, phone boxes and ice-cream bikes, and houses
-  window boxes, a lamp by the door, a doormat and a house number.
-- **Leftover ground is planted.** An empty cell between a road and a building, too small for the
-  woods and too big to leave bare, gets a little garden of its own at every zoom level: a grove of
-  broadleaf and conifer trees with a bench, round flower beds in stone kerbs, a statue on a paved
-  circle with benches and lamps, a fountain, or a lawn with a big tree and a picnic table, all kept
-  off the roads, the pavements and the lots next door. Build on the cell and the garden goes.
-- **Buildings with some shape.** Flats, towers, shops, office blocks and glass towers have rounded
-  corners, with plinths, cornices and window bands that follow them; towers end in stepped
-  penthouses, drums or slim spires, glass towers step back in stages or rise to a crowned drum;
-  workshops have true sawtooth roofs with glazed north lights, and warehouses barrel-vaulted roofs.
-  Corners are rounded only as far as the windows allow, so no window hangs off a curve. Houses get
-  stone plinths, hipped roofs, side wings, dormers, bay windows, a veranda, a columned porch, a
-  chimney breast, or rounded walls under a thin overhanging roof. Roof fittings keep to the rounded
-  roof and clear of what already stands on it, and wall fittings to the flat of the walls. The
-  lowest graphics detail keeps the plain blocks.
-- **Parks and trees with some shape.** Trees are built as trees: a tapering trunk forking into
-  limbs under a lumpy crown of clustered blobs, a conifer of drooping tiers, or a tall poplar, shaded
-  darker underneath. Neighbourhood parks have a rounded lawn, a winding path, trees of all three
-  kinds, a flower bed and a bench; the city park an irregular pond with a stone rim and a path round
-  it; ponds and flower beds are organic shapes rather than discs and boxes. Street trees, bushes and
-  rocks are rounder too, and so are the woods: broadleaves with billowing crowns of lumpy blobs,
-  conifers of four drooping, ragged tiers, and far-off trees drawn as a rounded flame rather than a
-  five-sided cone.
-- **Cars with some shape.** Cars, taxis, police cars, vans and the player's cars are built from a side
-  profile: a nose that rounds down to the bumper, a raked windscreen, a roof and a sloping rear
-  screen, arches cut round the wheels and every edge rounded, with glass, pillars, lamps, grilles,
-  plates and mirrors. Buses have a rounded nose and tail, a big curved windscreen, a band of windows
-  between slim pillars, doors on the kerb side, a destination board and a roof pod; lorries a rounded
-  cab with a wraparound screen, grille, mirrors and steps on a chassis, with a ribbed box, a fire
-  engine's lockers and ladder, or a bin lorry's hopper behind.
-- **Street-level detail.** Walking or driving, the streets around you fill in with the small things
-  you only see up close: paving joints, kerb stones, gutters, drains, manholes, patched and cracked
-  asphalt, litter and fallen leaves; street name signs at junctions, traffic signs, parking meters
-  outside shops, wooden utility poles with sagging wires along the house streets, and the odd road
-  works. Houses get mailboxes, bins, garden paths, flower beds, lawns, and back gardens with sheds,
-  washing lines, trampolines, barbecues, vegetable beds, paddling pools, trees, bicycles and the
-  occasional cat on the fence. Walls get drainpipes, air conditioners, meters and satellite dishes.
-  Shops get awnings, blade signs, A-boards, café tables, crates of produce, pigeons and dumpsters
-  round the back; offices flagpoles, planters, bollards and sculptures; factories fences, pallets,
-  barrels, containers, forklifts and gas cages; farms fences, hay bales, tractors, scarecrows and
-  chickens. Open ground grows grass, wildflowers, rocks, bushes, saplings, logs and mushrooms, and
-  the river banks reeds and lily pads. Only the streets near you are built, the nearest in the most
-  detail, a few at a time as you move, and all of it goes when you return to the map. The graphics
-  detail setting decides how far it reaches.
-- **Drive around town.** Press M, or the car button, to take a car out on the nearest street. W / S
-  drive and brake (and reverse), A D steer, Shift for a burst of speed, Space is the handbrake and V
-  swaps the chase camera for the driver's seat. The car has momentum of its own: pull the handbrake
-  in a turn, or floor it through a fast corner, and the back steps out into a drift, laying skid
-  marks and tyre smoke while the tyres squeal. Other cars are solid: you bump off them with a crunch,
-  and the traffic behind you stops rather than driving through you (it stops for you on foot, too).
-  Taking the wheel thins the traffic to about a third so the streets are drivable. The car leans in
-  corners, pitches up and down the bridge ramps, and the camera follows close behind, widening its
-  view with speed. Buildings and the river stop you. Esc or M parks it and returns to the map.
-- **Garage and street racing.** The car button (or M) opens the garage: your cars (a hatchback to
-  start with), the showroom (a sports coupé, a rally car, a muscle car and a supercar), a turntable
-  with the selected car, its ratings, ten paints, and five upgrades of three levels each (engine,
-  nitrous, tyres, suspension, brakes) bought with race winnings. It lists the races the city's streets
-  make: **circuits** (laps against three rivals), **sprints** (point to point), **drift** events (slide
-  round a loop to beat a score, with chain multipliers that a knock loses), a **drag** strip down the
-  longest straight (a perfect launch on the green gives a shove), and **pursuits** (reach the finish
-  with a police car on your tail; let it box you in and you're busted). Start one from the garage, or
-  drive into its glowing ring on the road and press Enter. A race bars every side street along the
-  route with striped boards and chevrons pointing the way on, paints a chequered line across the road
-  at the start and finish (always halfway along a street, never on a junction), lights amber chevrons
-  along the road ahead to show the way, and marks arrows through the bends; the rivals round the
-  corners on a smoothed racing line rather than turning on the spot. The HUD shows your place, lap,
-  time and a flashing wrong-way warning; R puts you back on the route. Winnings (a full purse for a win, less for second and third,
-  or by medal) buy cars and parts, and rivals get quicker as you win. The garage is yours rather than
-  a city's: it follows you from city to city.
-- **Street level looks its best.** Walking or driving, the sun's shadows are drawn at four times the
-  resolution from a small box around you and updated every frame, so people, cars, lamp posts and
-  benches cast crisp shadows that move with them, and the haze comes in closer. Cars have round
-  wheels with rims, number plates, grilles, bumpers, mirrors, door handles and exhausts; people have
-  hair, faces, necks, collars and belts, arms that swing with their stride, hands, shoes, differing
-  heights, and some carry backpacks. Sirens are only heard near a fire engine or police car on a
-  call, softly, fading with distance.
-- **Fishing docks.** Build them on the river bank (Water menu, from Small town). Each one employs 24
-  people, turns its jetty to the water and sends two fishing boats out to work the river and come
-  home. The catch sells for up to $2.40 a second per dock, shown as Fishing in the budget, but sewage
-  upstream thins it, so an untreated outlet above the docks costs money.
-- **Utilities along roads.** Six kinds of power station — wind, solar, gas (from Growing village,
-  cleaner than coal), coal, a hydroelectric dam on the river bank (from Thriving town) and a 3×3
-  nuclear plant (from Regional capital: 7,000 power and no smoke) — plus water towers and river pumps, sewage outlets. Buildings
-  need all three to grow past small. Outlets foul the river downstream, so pumps belong upstream.
-- **Pollution.** Industry and coal pollute the ground around them. It spreads, drives residents away, and
-  spoils water towers. Press P to see it.
-- **A different river every map**, generated from a seed that is stored in the save.
+- **Valeur du sol.** Chaque case vaut de 0 à 100 : parcs, vue sur la rivière, arrêts de transport, monuments et bons services montent ; pollution, bruit, délinquance et déchets non ramassés baissent. Les belles adresses paient plus d'impôts, grandissent plus vite, et les tours exigent au moins 30 de valeur.
+- **Marchandises.** Usines et fermes produisent des biens, boutiques et bureaux les consomment. Le surplus s'exporte par les entrées de ville, le rail interurbain, les docks et l'aéroport (dans la limite de leurs capacités) et rapporte de l'argent ; le manque s'importe, ce qui rogne les recettes des boutiques et creuse la demande industrielle. Les camionnettes livrent en ville, les camions emportent les exports.
+- **Tourisme.** Zones de loisirs, parcs, monuments et rives attirent des visiteurs, amenés par les entrées, les trains et l'aéroport. Le tourisme apparaît au budget et pousse la demande commerciale. La **tour d'observation** (Parcs, dès Cité) attire soixante visiteurs par minute.
+- **Taxe par zone.** Le budget a un taux pour les logements, les commerces, l'industrie et les bureaux (les fermes paient le taux industriel, les loisirs le taux commercial), plus un curseur qui les règle tous.
+- **Déchets.** Les bâtiments sortent des déchets chaque seconde. Les centres de recyclage envoient des camions vers les poubelles les plus pleines ; les déchets non ramassés font baisser la valeur du sol et, au pire, font perdre un niveau aux bâtiments.
+- **Funéraire et courrier.** Cimetières, crématoriums et bureaux de poste (Services, dès Ville prospère). Une fois la ville devenue Cité, les nouvelles tours exigent 30 % de couverture funéraire et postale.
+- **L'électricité et l'eau suivent les routes.** Chaque réseau routier connecté ne partage que ses propres centrales, pompes et émissaires : un quartier coupé du réseau reste dans le noir.
+- **Quartiers.** Peignez jusqu'à huit quartiers nommés (menu Quartiers) avec le même pinceau rond que les outils de terrain, en trois tailles, et donnez à chacun ses politiques : interdiction des tours, rues calmes, quartier vert, quartier touristique, exonération fiscale ou voisins vigilants. Les politiques locales sont facturées par bâtiment.
+- **Terrain.** Un pinceau en trois tailles (menu Terrain) et trois outils : **Abaisser** descend le sol d'un étage à chaque passe (une colline s'aplanit, puis on creuse, jusqu'à trois étages, lit de rivière compris), **Rehausser** le monte (un trou ou la rivière devient terrain constructible, puis la terre s'entasse en collines jusqu'à quatre étages), et **Aplanir** remet chaque case au niveau des berges. Les forêts grimpent sur les hauteurs ; rien ne s'y construit ni n'y roule. On peut aussi remblayer dans la rivière : creuser un nouveau chenal et remblayer l'ancien déplace la rivière, ou un mur de terre la barre carrément.
+- **Une eau qui bouge.** La rivière naît sur la carte, ruisseau d'une case un peu en retrait d'un bord, grossit le long de son cours supérieur puis quitte la carte en rivière de quelques cases, bascule en cascade dans une gorge et continue dans les collines jusqu'à l'horizon. C'est de l'eau simulée sur le sol, dans un lit en pente douce. Barrez-la : l'eau s'accumule derrière le barrage, monte sur les berges et s'étale jusqu'à trouver une autre descente, ravageant ce qu'elle recouvre ; retirez le barrage et elle s'écoule. Une inondation est une crue qui submerge les berges basses. Les digues rehaussent le sol protégé pour que l'eau aille ailleurs. Creusez un bassin (un étage par passe, jusqu'à trois, et le lit lui-même peut s'approfondir) et la nappe le remplit en lac ; creusez un canal depuis la berge et la rivière l'emprunte : canal + barrage sur l'ancien lit déplace la rivière. Le sol creusé est une vraie fosse, parois de terre et fond de gravier.
+- **Catastrophes.** Dès Petite ville, la rivière inonde parfois les basses terres et des tornades traversent la vallée, faisant perdre un ou deux niveaux aux bâtiments. Les digues protègent tout dans un rayon de sept cases. Désactivables dans Réglages.
+- **Vues de carte.** Valeur du sol, bien-être, bruit, délinquance, déchets, quartiers et risque d'inondation, depuis le bouton des calques.
+- **Statistiques.** Courbes de population, trésorerie, revenus, bonheur, valeur du sol, visiteurs et demande depuis le chargement.
+- **Annuler.** Ctrl+Z (ou le bouton annuler) reprend la dernière modification et la rembourse, jusqu'à trente pas.
+- **Villes sauvegardées.** Enregistrez et chargez des villes nommées depuis le menu, à côté de la sauvegarde auto.
+- **Succès.** Vingt-deux, de la première famille emménagée à la Ville mondiale, mémorisés dans ce navigateur.
+- **Deux paliers de plus.** Mégalopole à 10 000 habitants et Ville mondiale à 15 000, chacun avec une subvention.
+- **Son.** Un bourdonnement urbain qui suit le trafic, oiseaux le jour et grillons la nuit, sirènes pendant les interventions, signaux de construction et démolition, moteur en conduite et pas en marche. Tout est synthétisé ; interrupteur sur le bouton haut-parleur.
+- **Tactile.** Sur téléphones et tablettes, un doigt déplace et deux pincent et tournent (un doigt dessine avec un outil en main), et la marche comme la conduite ont un joystick à l'écran.
 
-## City progression and neighborhood services
+## Contenu du jeu
 
-Grow from Settlement to Metropolis through seven permanent city levels, at 0, 120, 400,
-900, 1,800, 3,500 and 6,500 residents. Each new milestone grants money once and unlocks
-services. The level chip in the top-left corner carries your level and happiness; click it for the
-roadmap and live service coverage.
+- **Un menu principal.** Reprenez votre ville, fondez-en une nouvelle, chargez la démo ou changez les réglages.
+- **La ville de démo.** Une ville d'une vingtaine de milliers d'habitants sur toute la carte : vieille ville en grille avec centre commerçant et bureaux autour d'un rond-point, industrie derrière une ceinture verte, banlieues, parc fluvial sur la presqu'île dans la boucle de la rivière, et une ville nouvelle sur trois ponts avec fermes, industrie et aéroport. Rail, métro, bus et taxis circulent, et la rivière quitte la carte en cascade. Le bouton menu du HUD la rouvre en jeu et met en pause. Réglages : détail visuel (Faible, Équilibré ou Élevé), ombres, durée du jour, sauvegarde auto et triche d'argent infini, persistants dans le navigateur. Le détail s'applique aussitôt : Faible simplifie bâtiments, arbres et véhicules ; Équilibré garde un détail moyen ; Élevé ajoute volets, jardinières, joints de toiture, balcons, terrasses, vitrines, feuillages denses et finitions des véhicules.
+- **Six silhouettes par type de bâtiment.** Boutiques, immeubles, bureaux et tours en six formes et palettes chacun, du petit alignement de briques aux tours de verre : une rue commerçante mélange hauteurs et couleurs au lieu d'un mur uniforme. Bureaux et tours portent un logo, et la nuit leurs étages s'éclairent en blanc froid avec les fenêtres chaudes des logements.
+- **Vallées fluviales par graine.** Chaque graine dessine une autre rivière, d'autres collines et une autre entrée d'autoroute ; on peut saisir une graine en fondant une ville.
+- **Routes libres, posées au clic comme dans Cities: Skylines.** Droite (deux clics), Courbe (départ, coude, arrivée) ou Fluide (chaque clic prolonge une courbe coulée). Les croisements deviennent des carrefours, les extrémités s'accrochent aux routes, et les routes sur l'eau deviennent des ponts.
+- **Les routes vont partout, façon Trafficity.** Pas de grille : un point rejoint une route proche, sinon s'accroche aux guides en pointillés issus des routes voisines (tout droit depuis une impasse, perpendiculaire à une route, parallèle depuis le départ, ou croisement de deux guides), sinon tourne par pas de 15° en longueurs de cases entières. L'infobulle nomme l'accrochage avec le prix. Maintenez **Alt** pour poser exactement sous le pointeur, ou **G** avec un outil route pour l'ancien accrochage au centre des cases.
+- **Des voies qui portent le trafic.** Chaque route a ses voies par sens (ruelle une, rue deux, voie rapide trois) vraiment utilisées. Les voitures choisissent leur voie selon leur direction, changent de voie pour doubler une voiture arrêtée, et traversent un carrefour ensemble quand leurs trajectoires ne se croisent pas : une route large porte plus (un carrefour d'avenues écoule près de trois fois le trafic d'avant, quand les carrefours ne prenaient qu'une voiture à la fois). **Ajouter une voie** élargit un côté d'un tronçon : glissez le long du côté voulu, cliquez pour toute la route, Maj pour retirer une voie. L'élargissement est fuselé, et celui qui finit au carrefour devient une voie de présélection. Les voies de direction sont calculées et peintes avec flèches ; les conducteurs se rangent avant de l'atteindre.
+- **Niveaux empilés.** Chaque point de route a un niveau : tunnel sous terre, sol, ou un, deux, trois étages. **+** ou **−** en dessinant règle le niveau du prochain point ; entre deux niveaux la route devient rampe (quatre cases par niveau). Les routes se rejoignent partout où elles se croisent au même niveau, en l'air aussi : carrefours élevés et échangeurs empilés se dessinent à la main ; à un niveau d'écart elles passent dessus ou dessous, et tout écart moindre est refusé. Les tabliers tiennent sur des piles issues du profil de la route, jamais sur la route du dessous, les carrefours élevés ont dalle et pilier propres, et un portail de tunnel se dresse où la route plonge. Anciens ponts et tunnels inchangés.
+- **Des feux que vous concevez.** Un feu suit un plan de phases, et dans chaque phase chaque mouvement (d'une route vers une autre) est vert, vert avec cédez-le-passage, ou rouge. Un nouveau feu part d'un plan sensé : en croix, les voies opposées passent ensemble avec tourne-à-gauche en cédez ; en T, l'axe passant d'abord puis la branche. Cliquez un carrefour à feux avec l'outil Feux pour l'éditer : ses phases et durées de vert, et des flèches sur le carrefour pour chaque mouvement, colorées selon la phase choisie ; cliquez une flèche pour changer son état. Ajoutez, retirez et réglez les phases, ou activez l'**adaptatif**, qui coupe une phase inutile et allonge une phase chargée jusqu'au double de son vert. Les tourne-à-gauche en cédez passent en fin de phase, les lanternes montrent l'état réel de chaque entrée, et pompiers comme police passent au rouge.
+- **Modifiez les routes après coup.** **Modifier routes (N)** déplace un carrefour ou une extrémité : les routes suivent, gardent leurs courbes, fusionnent sur un nœud et forment des carrefours avec ce qu'elles croisent. Glissez le milieu d'une route pour la courber. **Couper (Z)** retire une route jusqu'aux carrefours voisins au clic, ou juste le tronçon glissé. **Élargir** élargit toujours toute la route au clic, et un glisser ne change que ce tronçon. Chaque modification est prévisualisée avec prix, bâtiments rasés et obstacles (collines, rivière, pont trop court), ne facture que la route ajoutée, et s'annule par Ctrl+Z.
+- **Quatre types de routes.** Ruelles (14 $/case, une chaussée partagée), rues (25 $, deux voies), avenues (180 $, quatre voies) et voies rapides (430 $, six voies, les plus rapides, mais rien ne se zone le long). Chaque type tient dans son corridor avec accotements. Élargir monte d'un cran au prix de la différence ; continuez et ça reboucle sur ruelle. Les entrées de ville supplémentaires arrivent en voie rapide ; l'autoroute de la carte a ses échangeurs pour construire.
+- **Une autoroute hors carte.** Chaque carte a une autoroute qui passe juste au-delà de son grand bord : deux chaussées à sens unique côte à côte, trafic arrivant des deux bouts. Une **route à 2 voies** la quitte par un **trèfle complet**, hors carte lui aussi et tracé comme en vrai (quatre boucles pour les gauches, quatre grands arcs pour les droites), et entre sur la carte quelques cases avant de s'arrêter net, chaque chaussée finissant seule : ces deux moignons sont le seul terrain pris, et la ville se construit depuis eux, un pour l'arrivée et un pour le départ. Le trafic extérieur arrive par les deux routes. Le transit régional roule sur l'autoroute d'un bout à l'autre sans jamais sortir. Autoroute et échangeurs sont inrasables et gratuits d'entretien. Les hélicoptères volent une fois la ville devenue Cité.
+- **Autoroutes façon Cities: Skylines 2.** Outre la voie rapide à double sens, il y a une **autoroute sens unique** (240 $/case, trois voies), une **route à 2 voies** (170 $/case) et une **bretelle** (110 $/case, une voie). Toutes roulent dans le sens du tracé : posez une chaussée, puis l'autre à côté, et reliez aux rues par des bretelles. Commencez une bretelle sur une autoroute pour une sortie, finissez dessus pour une entrée, et + ou − en dessinant pour passer dessus ou dessous. Là où une bretelle quitte ou rejoint une chaussée, le trafic s'insère en roulant au lieu de s'arrêter ; un croisement à niveau de deux autoroutes tourne à tour de rôle. Ni riverains, ni trottoirs, ni stationnement. Élargir fait passer une bretelle en route à 2 voies, puis autoroute, et retour. Une voie d'entrecroisement se comporte comme une voie ajoutée : le musoir est pavé, la ligne de rive s'ouvre, et les voitures se rabattent avant de sortir comme après d'entrer. Chaque carrefour a des bordures arrondies, et lampadaires, feux, stops, panneaux, mobilier et voitures garées restent hors chaussée.
+- **Plus de contrôle du trafic.** Feux et ronds-points, plus stops toutes-directions (60 $ le carrefour) et rues apaisées (45 $/case) qui divisent la vitesse par deux et éliminent presque les collisions. L'outil rond-point propose quatre anneaux, choisis à côté des cartes : adapté à la route la plus large, petit une voie (900 $), deux voies (1 350 $) ou grand deux voies (2 160 $) pour les gros carrefours.
+- **Pivotez un bâtiment avant de le poser.** Clic droit, G, ou bouton Pivoter du panneau. Les sites rectangulaires comme la gare pivotent avec, et l'orientation est sauvegardée.
+- **Cambriolages, courses de rue et hélicoptères.** Dès la Cité, un cambriolage frappe parfois une boutique ou un bureau ; le commissariat le plus proche répond, et une équipe laissée seule quatre-vingt-dix secondes part avec 1 200 $. La nuit, des pilotes sauvages courent de longs parcours à toute vitesse. Les hélicoptères tournent et se déplacent vers les événements.
+- **Ruelles de service.** Un bâtiment derrière le rang de rue reçoit une ruelle jusqu'au trottoir, entre ses voisins. Pompiers et patrouilles y répondent normalement.
+- **Terre ferme uniquement.** La rivière est dessinée un peu plus large que le masque qui décide de l'eau, donc la bande de chaque côté compte comme rive : rien ne s'y zone ni s'y construit, aucun lot vide ne s'y remplit. Exception : pompe, émissaire ou station d'épuration, qui appartiennent à la berge.
+- **Messages de ville.** Les problèmes s'accumulent derrière la cloche en haut à droite avec un compteur ; chaque nouveauté surgit quelques secondes, un clic sur la cloche liste tout, et un clic sur un message y emmène la caméra.
+- **Gestion du trafic.** Feux, sens uniques et ronds-points. Les carrefours libres ne laissent passer qu'une voiture à la fois ; les feux écoulent toute une entrée d'un coup ; les ronds-points ne s'arrêtent jamais. L'anneau prend la taille de la route la plus large, du cercle de 1,5 case au 2,6 cases d'avenue ; une voie rapide arrivant sur un rond-point rencontre un anneau de taille avenue plutôt qu'un cercle à six voies.
+- **Entrées d'autoroute multiples.** L'entrée de départ est gratuite ; Petite ville débloque de nouvelles entrées à 3 500 $ sur bords dégagés. Chacune ajoute une avenue de sept cases. Toute entrée dessert ses quartiers connectés, et les conducteurs régionaux choisissent une entrée joignable.
+- **Le trafic extérieur arrive par la route.** Chaque entrée se prolonge de seize cases hors carte. Le trafic régional y naît et y meurt puis entre en roulant : jamais d'apparition sur le pas de la porte, et la file de sortie se forme hors carte au lieu de barrer l'entrée.
+- **Politiques municipales.** Six décisions permanentes — recyclage, détecteurs, voisins vigilants, bourses, transports gratuits et péage urbain — payées chaque seconde, facture croissante avec la ville. Elles changent pollution, incidents, portée scolaire, fréquentation et part de la voiture.
+- **De plus gros services en grandissant.** Un hôpital 2 × 2 à Ville prospère et un hôpital central 3 × 2 à Capitale régionale prolongent la santé bien au-delà du dispensaire ; la préfecture de police à la Cité couvre plus large et garde deux patrouilles dehors.
+- **Des parcs pour chaque taille.** Parcs de quartier dès le début, aires de jeux à Village en croissance, terrain de sport deux cases à Ville prospère et grand parc trois cases avec étang à la Cité.
+- **Des voies ferrées qui se connectent seules.** Deux gares se relient par voie aérienne le long des rues, et une gare à moins de trente cases d'une entrée ouvre aussi une ligne vers l'extérieur : des gens arrivent et partent en train plutôt qu'en voiture.
+- **Plans de lignes.** Choisir un outil transport allume les lignes du mode dans les rues, ses arrêts et un repère par ligne, comme l'outil métro montre ses tunnels.
+- **Couverture en un coup d'œil.** Choisir un service peint la zone déjà desservie : la prochaine clinique, gare ou arrêt se pose dans le trou.
+- **Marchez dans les rues.** F, ou le bouton marcheur en haut à droite, pour descendre au niveau des yeux où vous regardez. ZQSD marche, Maj court, la souris regarde (cliquez pour la capturer). Bâtiments, jardins et rivière bloquent, mais rues, ruelles et parcs sont ouverts. Échap ou F remonte où vous étiez. Les gens marchent sur les trottoirs (plus avec la ville, moins tard la nuit), et au sol les bordures se garnissent de bancs, poubelles, bouches d'incendie, arbres, râteliers, jardinières, boîtes aux lettres, bornes et un abri à chaque arrêt. Les voitures se garent le long des rues et avenues devant les lots bâtis, à moitié sur le trottoir pour laisser les voies libres, loin des carrefours, passages, ronds-points et pistes. On peut monter les rampes et traverser les ponts.
+- **Du détail vu d'en haut.** Zoomez sur la ville et le détail afflue autour du point regardé, avec les toitures : locaux techniques et climatiseurs, évents et extracteurs, conduits, châteaux d'eau sur pilotis, paraboles et antennes, jardins de toit et étendoirs sur les barres, panneaux solaires, mâts et héliports sur les tours, panneaux sur les boutiques, lanterneaux sur les hangars, garde-corps et cage d'escalier sur tout ce qui est haut. Les lots zonés vides sont des chantiers : terre retournée, palissades, baraque de chantier, briques et sable, échafaudages ou fondations, parfois une grue. Les rues commerçantes ont kiosques à journaux, carrioles, cabines et vélos-glaces, et les maisons jardinières, lampe de porte, paillasson et numéro.
+- **Le moindre délaissé est planté.** Une case vide entre route et bâtiment, trop petite pour les bois et trop grande pour rester nue, reçoit son jardinet à tout zoom : bosquet de feuillus et conifères avec banc, massifs ronds à bordure de pierre, statue sur rond pavé avec bancs et lampes, fontaine, ou pelouse au grand arbre et table de pique-nique, toujours hors routes, trottoirs et lots voisins. Construisez dessus et le jardin part.
+- **Des bâtiments en relief.** Immeubles, tours, boutiques et blocs de bureaux ont des angles arrondis, avec soubassements, corniches et bandeaux de fenêtres qui les suivent ; les tours finissent en attiques en retrait, tambours ou flèches fines, les tours de verre en gradins ou tambour couronné ; les ateliers ont de vrais toits en dents de scie à vitrages nord, et les entrepôts des voûtes en berceau. Les angles ne s'arrondissent que jusqu'aux fenêtres : aucune ne pend dans le vide. Les maisons ont soubassements de pierre, toits à croupes, ailes latérales, lucarnes, bow-windows, véranda, porche à colonnes, dosseret de cheminée, ou murs ronds sous mince débord. Les équipements de toit restent sur le toit arrondi à l'écart de l'existant, et ceux de façade sur le plat des murs. Le détail le plus bas garde les blocs simples.
+- **Parcs et arbres en relief.** Les arbres sont construits comme des arbres : tronc fuselé fourchu sous couronne bosselée de touffes, conifère en étages retombants, ou haut peuplier, ombrés dessous. Les parcs de quartier ont pelouse ronde, allée sinueuse, les trois essences, massif et banc ; le grand parc un étang irrégulier à margelle de pierre avec allée autour ; étangs et massifs sont organiques, pas disques ni boîtes. Arbres de rue, buissons et rochers sont plus ronds, comme les bois : feuillus à couronnes bouillonnantes, conifères à quatre étages retombants et irréguliers, et arbres lointains en flamme arrondie plutôt qu'en cône à cinq faces.
+- **Des voitures en relief.** Voitures, taxis, police, camionnettes et vos voitures naissent d'un profil latéral : nez arrondi au pare-chocs, pare-brise incliné, toit et lunette plongeante, passages de roues découpés et arêtes adoucies, avec vitres, montants, feux, calandres, plaques et rétros. Les bus ont nez et poupe arrondis, grand pare-brise courbe, bande de vitres entre piliers fins, portes côté trottoir, girouette et caisson de toit ; les camions une cabine ronde à pare-brise enveloppant, calandre, rétros et marchepieds sur châssis, avec caisse nervurée, coffres et échelle du camion de pompiers, ou trémie de la benne.
+- **Détail au ras du sol.** À pied ou en voiture, les rues proches se garnissent de ce qu'on ne voit que de près : joints de pavés, bordures, caniveaux, avaloirs, regards, asphalte rapiécé et fissuré, détritus et feuilles mortes ; plaques de rues aux carrefours, panneaux, horodateurs devant les boutiques, poteaux de bois aux fils affaissés le long des rues pavillonnaires, et parfois des travaux. Les maisons ont boîtes aux lettres, poubelles, allées, massifs, pelouses, et jardins arrière avec cabanons, étendoirs, trampolines, barbecues, potagers, pataugeoires, arbres, vélos et parfois un chat sur la clôture. Les murs ont gouttières, climatiseurs, compteurs et paraboles. Les boutiques ont stores, enseignes, chevalets, terrasses, cageots, pigeons et bennes à l'arrière ; les bureaux mâts, jardinières, bornes et sculptures ; les usines clôtures, palettes, fûts, conteneurs, chariots et cages à gaz ; les fermes clôtures, bottes de foin, tracteurs, épouvantails et poules. Les terrains vagues poussent herbe, fleurs sauvages, rochers, buissons, semis, troncs et champignons, et les berges roseaux et nénuphars. Seules les rues proches sont construites, les plus proches en plus fin, quelques-unes à la fois en avançant, et tout disparaît au retour sur la carte. Le réglage de détail décide de la portée.
+- **Conduisez en ville.** M, ou le bouton voiture, pour prendre une voiture dans la rue la plus proche. Z / S accélère et freine (et recule), Q D dirige, Maj pour la pointe, Espace frein à main et V passe en place conducteur. La voiture a son inertie : tirez le frein en virage, ou foncez dans une courbe rapide, et l'arrière décroche en drift, traces de gomme et fumée pendant que les pneus crissent. Les autres voitures sont solides : on les heurte avec un choc, et le trafic derrière s'arrête au lieu de vous traverser (il s'arrête pour vous à pied aussi). Prendre le volant éclaircit le trafic au tiers pour rouler. La voiture penche en virage, tangue sur les rampes de pont, et la caméra suit de près en élargissant avec la vitesse. Bâtiments et rivière bloquent. Échap ou M la gare et remonte sur la carte.
+- **Garage et courses de rue.** Le bouton voiture (ou M) ouvre le garage : vos voitures (une citadine au début), le showroom (coupé sport, rallye, muscle car et supercar), un plateau avec la voiture choisie, ses notes, dix peintures, et cinq améliorations de trois niveaux (moteur, nitro, pneus, suspension, freins) achetées avec les gains. Il liste les courses nées des rues : **circuits** (manches contre trois rivaux), **sprints** (point à point), **drift** (glisser sur une boucle pour un score, avec multiplicateurs perdus au moindre choc), une **drag** sur la plus longue ligne droite (un départ parfait au vert donne un élan), et des **poursuites** (finir avec une police aux trousses ; coincé, c'est perdu). Lancez depuis le garage, ou entrez dans l'anneau lumineux sur la route et Entrée. Une course barre chaque rue latérale de barrières rayées et de chevrons, peint une ligne à damier au départ comme à l'arrivée (toujours au milieu d'une rue, jamais sur un carrefour), allume des chevrons orange devant pour guider, et flèche les virages ; les rivaux prennent une trajectoire lissée plutôt que de tourner sur place. Le HUD montre place, tour, temps et alerte de contresens clignotante ; R remet sur le parcours. Les gains (bourse entière au vainqueur, moins aux suivants, ou par médaille) paient voitures et pièces, et les rivaux durcissent à mesure des victoires. Le garage est à vous, pas à une ville : il vous suit de ville en ville.
+- **Le niveau rue sous son meilleur jour.** À pied ou en voiture, les ombres du soleil sont dessinées à résolution quadruple dans une petite boîte autour de vous et rafraîchies à chaque image : gens, voitures, réverbères et bancs portent des ombres nettes qui bougent avec eux, et la brume se rapproche. Les voitures ont roues rondes à jantes, plaques, calandres, pare-chocs, rétros, poignées et échappements ; les gens cheveux, visages, cous, cols et ceintures, bras qui balancent, mains, chaussures, tailles variées, et certains un sac à dos. Les sirènes ne s'entendent que près d'un camion ou d'une voiture de police en intervention, doucement, en s'éloignant.
+- **Ports de pêche.** Au bord de la rivière (menu Eau, dès Petite ville). Chacun emploie 24 personnes, tourne son ponton vers l'eau et envoie deux bateaux travailler la rivière. La pêche se vend jusqu'à 2,40 $/seconde par dock, ligne Pêche au budget, mais les égouts en amont l'appauvrissent : un émissaire brut au-dessus des docks coûte de l'argent.
+- **Les réseaux suivent les routes.** Six centrales — éolien, solaire, gaz (dès Village en croissance, plus propre que le charbon), charbon, barrage hydroélectrique en berge (dès Ville prospère) et centrale nucléaire 3 × 3 (dès Capitale régionale : 7 000 d'énergie, sans fumée) — plus châteaux d'eau, pompes de rivière et émissaires. Les bâtiments exigent les trois pour dépasser le stade petit. Les émissaires souillent l'aval : les pompes vont en amont.
+- **Pollution.** Industrie et charbon polluent le sol autour. Elle se propage, chasse les habitants et gâte les châteaux d'eau. P pour la voir.
+- **Une autre rivière par carte**, générée d'une graine conservée dans la sauvegarde.
 
-Eight new buildings have distinct models and ongoing costs: neighborhood parks, medical
-clinics, elementary schools, fire stations, police stations, recycling centers, universities,
-and solar farms. The Services menu shows capacity, range and unlock requirements; the green
-ring previews the area served before placement. Solar farms are in Electricity.
+## Progression et services de quartier
 
-Services share their capacity among nearby residents, and both ends must connect to the
-highway. Coverage, pollution, utilities, taxes and commuting influence happiness and housing
-demand. From Growing village, homes need healthcare and education to upgrade to apartments.
-High-rises unlock at Thriving town; residential towers also need fire protection, public
-safety, waste collection and recreation. Fire and police provide coverage and growth benefits, and dispatch vehicles to incidents and patrol destinations.
+Grandissez de Campement à Métropole sur sept paliers définitifs, à 0, 120, 400, 900, 1 800, 3 500 et 6 500 habitants. Chaque palier offre une subvention unique et débloque des services. La pastille en haut à gauche porte niveau et bonheur ; cliquez-la pour la feuille de route et la couverture en direct.
 
-Railway stations connect to each other automatically. A station near a city entrance also runs a line
-out of town, which runs off the map beside the highway and carries a share of the people who would
-otherwise drive in and out, earning fares. The demo city includes the new services. Existing v3 local saves and share links still load;
-new v6 saves preserve earned milestones, service funding, loan balances, decline timers, active fires, crime and recent patrol protection.
-Versions 4 and 5 also migrate automatically. Old cities inherit
-the milestone matching their current population without collecting past grants again.
+Huit bâtiments ont modèles et coûts propres : parcs de quartier, dispensaires, écoles primaires, casernes, commissariats, centres de recyclage, universités et fermes solaires. Le menu Services montre capacité, portée et conditions ; l'anneau vert prévisualise la zone desservie avant la pose. Les fermes solaires sont dans Électricité.
 
-## City view and emergency activity
+Les services partagent leur capacité entre riverains, et les deux bouts doivent rejoindre l'autoroute. Couverture, pollution, réseaux, impôts et trajets influent sur bonheur et demande de logements. Dès Village en croissance, les logements exigent santé et éducation pour devenir appartements. Les tours se débloquent à Ville prospère ; elles exigent aussi pompiers, sécurité, déchets et loisirs. Pompiers et police apportent couverture et croissance, et envoient des véhicules aux incidents comme en patrouille.
 
-One bar along the bottom of the screen carries everything: zone demand and utility meters on the left,
-the build categories in the middle, and the city clock and speed controls on the right. Tool panels open
-above it. At night vehicles show their own lamps; they no longer wash the road with headlight beams, so streetlights carry the lighting. Zone colors appear only while the Zones menu is selected. Roads use normal asphalt by default; the traffic button in the top-right corner toggles congestion shading independently. Signals are 28% smaller and road vehicles are 32% smaller.
+Les gares se connectent automatiquement. Une gare près d'une entrée ouvre aussi une ligne vers l'extérieur, qui sort de la carte le long de l'autoroute et transporte une part de ceux qui entreraient et sortiraient en voiture, en gagnant des recettes. La démo inclut les nouveaux services. Les sauvegardes locales v3 et les liens existants chargent toujours ; les nouvelles sauvegardes v6 gardent paliers, financement, prêts, compteurs de déclin, feux actifs, délinquance et protections de patrouille. Les versions 4 et 5 migrent aussi. Les vieilles villes héritent du palier de leur population sans retoucher les subventions passées.
 
-Vehicles reserve their oriented footprint when spawning, moving, and entering a new road segment. Movement is checked along its path, and junction traffic is serialized when paths conflict. Occupied space blocks vehicles; a reused vehicle slot starts a new visual trip instead of interpolating from the previous car.
+## Vue de ville et urgences
 
-From Small town onward, random incidents add management pressure:
+Une barre en bas d'écran porte tout : demande de zones et compteurs à gauche, catégories de construction au milieu, horloge et vitesses à droite. Les panneaux s'ouvrent au-dessus. La nuit, les véhicules montrent leurs lampes sans napper la route : l'éclairage vient des réverbères. Les couleurs de zones n'apparaissent qu'avec le menu Zones sélectionné. Les routes sont en asphalte normal par défaut ; le bouton circulation en haut à droite bascule l'ombrage de congestion. Feux 28 % plus petits, véhicules 32 % plus petits.
 
-- **Collisions:** two nearby vehicles stop with a warning and smoke. Police can clear the incident; otherwise recovery releases it after 35 simulation seconds. Vehicle bodies stay separate during the incident.
-- **Police patrols:** operating stations dispatch cars to nearby properties. After a visit, the surrounding seven-cell area gets 180 seconds of protection, preventing 85% of attempted crimes. Crime hotspots reduce tax revenue and happiness, and fade over time.
-- **Fires:** flames and smoke appear on buildings. Working fire stations dispatch an engine along a real road route. It needs eight seconds at the destination to extinguish the fire. After 120 seconds without help, the building loses a level. Burning buildings stop growing and paying taxes.
+Les véhicules réservent leur emprise orientée à l'apparition, en roulant et en entrant sur un nouveau segment. Le mouvement est vérifié le long du trajet, et les trafics en conflit au carrefour passent à tour de rôle. L'espace occupé bloque ; un emplacement réutilisé démarre un nouveau trajet visuel au lieu d'interpoler depuis la voiture précédente.
 
-Emergency vehicles obey traffic and can be delayed by jams. Each station handles one dispatch at a time. Inspect shows local fire/crime status; city overview reports active patrols, engines, extinguished fires and prevented crimes. Fires, crime pressure and patrol protection survive reloading. Traffic trips and collision scenes restart with the traffic simulation.
+Dès Petite ville, des incidents aléatoires mettent la pression :
 
-## City life and transport
+- **Collisions :** deux véhicules proches s'arrêtent avec signal et fumée. La police peut dégager ; sinon la dépanneuse libère après 35 secondes simulées. Les carrosseries restent séparées.
+- **Patrouilles :** les commissariats en service envoient des voitures vers les propriétés proches. Après une visite, sept cases autour sont protégées 180 secondes, empêchant 85 % des délits tentés. Les points chauds rognent recettes et bonheur, puis s'estompent.
+- **Incendies :** flammes et fumée sur les bâtiments. Les casernes en service envoient un camion par la route réelle. Il faut huit secondes sur place pour éteindre. Après 120 secondes sans aide, le bâtiment perd un niveau. Un bâtiment qui brûle ne grandit plus et ne paie plus d'impôts.
 
-The first visit opens a five-step welcome tutorial explaining the goal (6,500 residents), the first neighborhood, utilities, services and transport. It pauses the simulation, can be skipped, and is available again from Menu → Welcome tutorial. Keyboard help remains available under H.
+Les secours respectent la circulation et peuvent être ralentis par les bouchons. Chaque poste gère une intervention à la fois. L'inspection montre le statut feu/délinquance local ; la vue d'ensemble rapporte patrouilles, camions, feux éteints et délits empêchés. Feux, pression criminelle et protections survivent au rechargement. Trajets et scènes de collision repartent avec la simulation.
 
-- **Farmland** is open from the start: fields, barns, silos and then greenhouses. It meets industrial demand with a few jobs, no pollution and little power, but the fields drink half as much water again.
-- **Leisure & tourism** unlocks at Small town (400 residents): cafés with terraces, boutique hotels and resort towers with a pool. It meets commercial demand and pays more tax the closer it is to parks and the river.
-- **Offices** unlock at Thriving town (900 residents) and grow more slowly than other zones: a low block, then a mid-rise, and a tower only once the city is a City (1,800 residents) and the address has a land value of 45. Purple zoning supplies clean jobs and a separate demand meter. Building upgrades require 25%, then 50%, city education coverage.
-- **Buses** unlock at Small town (400 residents). Place stops near homes and jobs. Stops automatically connect to the nearest earlier reachable stop; buses run return trips. Both ends need utilities and a road route in each direction. Walking range is 9 cells, capacity 30 passengers per connection, and congestion reduces throughput.
-- **Passenger rail** unlocks at City (1,800 residents). Stations reserve 3×2 cells and connect automatically with elevated tracks along existing road corridors. Trains avoid road congestion, with an 18-cell walking range and 120-passenger connection capacity.
-- **Regional airports** unlock at Regional capital (3,500 residents). An 8×3 site contains a runway, terminal and control tower. Operating airports replace some incoming road trips within 24 cells with flights, capped at 240 passengers per minute per airport. Flights and trains are animated; passengers are simulated as aggregate trips.
-- **Sewage treatment** unlocks at Small town. The $3,200 river-bank plant handles 2,200 sewage units and filters 95% of its effluent with full electricity. Power shortages reduce filtering. Ordinary outlets remain cheaper but discharge untreated sewage.
-- **City overview** reports active transport connections, ridership, air passengers, fares and filtered sewage. Bus and rail fares are $0.08 per trip; air passengers contribute $0.20. Transport operating costs are fixed, shown on the tool cards. Transit currently supports direct connections, without transfers, custom lines or timetables.
+## Vie urbaine et transports
 
-Cars, vans, delivery trucks and buses have distinct bodies, windows, wheels and lights. Signals have three lenses, hoods and marked crossings. Factory variants include sawtooth workshops, brick plants with stacks, tank farms and solar-topped warehouses. The expanded demo showcases offices, bus routes, rail and an airport; it begins at an earned Regional capital level.
+La première visite ouvre un tutoriel de bienvenue en cinq étapes : l'objectif (6 500 habitants), le premier quartier, les réseaux, les services et les transports. Il met en pause, peut être sauté, et se retrouve dans Menu → Tutoriel de bienvenue. L'aide clavier reste sous H.
 
-## Managing a growing city
+- **Fermes** ouvertes dès le début : champs, granges, silos puis serres. Elles répondent à la demande industrielle avec quelques emplois, sans pollution et peu d'énergie, mais les champs boivent une fois et demie plus d'eau.
+- **Loisirs & tourisme** dès Petite ville (400 habitants) : cafés en terrasse, hôtels de charme et tours de villégiature avec piscine. Répond à la demande commerciale et paie plus d'impôts près des parcs et de la rivière.
+- **Bureaux** dès Ville prospère (900 habitants), plus lents que les autres zones : un petit bloc, puis un intermédiaire, et une tour seulement une fois Cité (1 800 habitants) avec 45 de valeur au sol. Le zonage violet apporte des emplois propres et son compteur de demande. Les évolutions exigent 25 %, puis 50 %, de couverture scolaire municipale.
+- **Bus** dès Petite ville (400 habitants). Posez des arrêts près des logements et des emplois. Les arrêts se relient automatiquement au précédent joignable ; les bus font l'aller-retour. Les deux bouts exigent réseaux et itinéraire routier dans chaque sens. Zone de marche 9 cases, 30 voyageurs par liaison, et la congestion réduit le débit.
+- **Trains de voyageurs** dès la Cité (1 800 habitants). Les gares réservent 3 × 2 cases et se connectent automatiquement par voies aériennes le long des rues. Les trains évitent la congestion routière, avec 18 cases de marche et 120 voyageurs par liaison.
+- **Aéroports régionaux** dès Capitale régionale (3 500 habitants). Un site 8 × 3 avec piste, aérogare et tour. Les aéroports en service remplacent une part des trajets auto entrants dans un rayon de 24 cases par des vols, plafonnés à 240 voyageurs par minute et par aéroport. Vols et trains sont animés ; les passagers sont simulés en flux agrégés.
+- **Épuration** dès Petite ville. La station en berge à 3 200 $ traite 2 200 unités d'égouts et filtre 95 % de ses effluents à pleine électricité. Les coupures réduisent la filtration. Les émissaires ordinaires restent moins chers mais rejettent brut.
+- **Vue d'ensemble** rapporte lignes actives, fréquentation, passagers aériens, recettes et égouts filtrés. Bus et trains : 0,08 $ par trajet ; passagers aériens : 0,20 $. Les coûts d'exploitation sont fixes, affichés sur les cartes. Le transport ne fait que du direct, sans correspondances, lignes personnalisées ni horaires.
 
-Click **Inspect** (I), then a building, to see its residents or jobs, local service coverage,
-operating costs and exact upgrade blockers. Clicking without a build tool also inspects.
-Clicking a roof selects that building, even when it hides another tile behind it.
+Voitures, camionnettes, camions et bus ont carrosseries, vitres, roues et feux distincts. Les feux ont trois lentilles, visières et passages marqués. Les usines déclinent ateliers en dents de scie, briqueteries à cheminées, parcs de cuves et entrepôts coiffés de solaire. La démo élargie montre bureaux, bus, rail et aéroport ; elle démarre au niveau Capitale régionale acquis.
 
-The policies button in the top-right corner opens the city's standing policies. Each costs a fixed
-amount per second plus a share for every resident, unlocks at a city level, and is saved with the city.
-Recycling cuts industrial pollution by 40%, smoke alarms cut fires by 55%, neighborhood watch slows
-crime by 40%, study grants stretch schools 30% further, free public transport moves far more commuters
-but ends fare income, and the congestion charge removes a quarter of car commutes and tolls the rest at
-the cost of a few points of happiness.
+## Gérer une ville qui grandit
 
-The treasury opens a detailed budget with tax revenue, congestion charge income, road upkeep, service
-upkeep, policy costs and loan payments. Nine funding sliders range from 50% to 150%. Upkeep scales directly; capacity has
-diminishing returns (71% at half funding, 122% at 150%). A single $6,000 recovery loan costs
-$6,600 total, repaid at $6 per simulation second. Repayment pauses with the simulation and
-can be settled early. Private growth on existing zones continues even when city cash is negative.
+Cliquez **Inspecter (I)**, puis un bâtiment : habitants ou emplois, couverture locale, coûts et blocages exacts. Cliquer sans outil inspecte aussi. Cliquer un toit sélectionne ce bâtiment, même s'il cache la case derrière.
 
-Civic providers consume 3 power and 2 water/sewage capacity each. Disconnected or unserved
-providers stop operating; congestion on their access road reduces civic output by up to 50%.
-Disconnected properties no longer pay taxes, and utility shortages halve a property's tax output.
+Le bouton politiques en haut à droite ouvre les politiques permanentes. Chacune coûte un fixe par seconde plus une part par habitant, se débloque à un niveau, et suit la sauvegarde. Le recyclage coupe la pollution industrielle de 40 %, les détecteurs les feux de 55 %, les voisins vigilants ralentissent la délinquance de 40 %, les bourses étendent les écoles de 30 %, les transports gratuits déplacent bien plus d'usagers mais tuent les recettes, et le péage retire un quart des trajets auto en taxant le reste, au prix de quelques points de bonheur.
 
-Apartments and towers need ongoing civic coverage. Maintenance thresholds are lower than
-upgrade thresholds to avoid constant upgrade/downgrade cycles. An amber marker warns of a
-service shortfall; after 180 consecutive simulation seconds the home drops one level.
-Restoring coverage clears the countdown. Saving and reloading preserves it.
+La trésorerie ouvre un budget détaillé : recettes fiscales, péage, entretien des routes, des services, politiques et prêt. Neuf curseurs de 50 % à 150 %. L'entretien suit directement ; la capacité a des rendements décroissants (71 % à mi-financement, 122 % à 150 %). Un prêt de relance unique de 6 000 $ coûte 6 600 $ au total, remboursé à 6 $ par seconde simulée. Le remboursement suit la pause et peut être soldé par avance. La croissance privée continue même en négatif.
 
-Narrow curbs meet compatible straight roadside lots. Lot strips move together toward the curb; conflicting shifts are rejected at junctions. Building fronts reach their road-facing lot boundary.
+Les équipements consomment 3 d'énergie et 2 d'eau/égouts chacun. Déconnectés ou non desservis, ils s'arrêtent ; la congestion de leur rue réduit leur rendement jusqu'à 50 %. Les propriétés déconnectées ne paient plus d'impôts, et les manques divisent leur impôt par deux.
 
-Roads are placed freely, and zoning follows them. While a zone tool is in hand, every street with
-frontage shows rows of zone cells along its kerb, up to three deep, at whatever angle or curve the
-road takes. Paint them with the zone brush (three sizes; Shift-drag unzones, $5 a cell). Buildings
-stand full size in their cells, in rows turned to face the road. Beside a road within 10° of the grid
-the cells fall on the tiles exactly where lots always were. On the inside of a tight curve the rows
-thin out rather than overlap. A two-lane road on grid snap fills one square and an avenue a
-three-square corridor. An avenue costs $180/cell and three times a road's upkeep, for the three tiles
-it takes. Larger sites keep to the grid, and back lanes only run behind rows squared to it.
+Appartements et tours exigent une couverture continue. Les seuils d'entretien sont sous les seuils d'évolution pour éviter le yoyo. Un repère orange prévient d'un manque ; après 180 secondes simulées le logement perd un niveau. Rétablir la couverture annule le compte à rebours. Sauvegarder et recharger le préserve.
 
-## Controls
+Les bordures étroites rejoignent les lots droits compatibles. Les bandes de lots avancent ensemble vers le trottoir ; les mouvements en conflit sont refusés aux carrefours. Les façades atteignent leur limite côté rue.
 
-| Input | Action |
-| --- | --- |
-| Left click | Place road points, signals, roundabouts and service buildings |
-| Left drag | Paint zone cells along roads (Shift-drag unzones); bulldoze a rectangle (a drag also lays a single road) |
-| Right click / Esc | Stop laying a road; Esc again puts the tool away, closes panels and clears the inspection |
-| Right drag, Q / E | Rotate |
-| WASD / arrows, middle drag | Pan |
-| Wheel | Zoom |
-| I | Inspect a building and its growth requirements |
-| L, R, V, X | Lane, Road, Avenue, Expressway |
-| + / − | The level of the next road point: tunnel, ground, or 1–3 up (ramps between) |
-| K, J | Stop signs, traffic calming |
-| G, right click | Turn the building in hand before placing it |
-| F | Walk the streets at eye level; Esc or F again to return |
-| M | Drive a car around town; V switches to the driver's seat; Esc or M to park |
-| U | Upgrade a road one step wider (drag for just a stretch) |
-| N, Z | Edit roads (drag points and bends), Cut roads |
-| Add lane (Roads panel) | Drag along one side of a road to add a lane there; Shift-drag removes one |
-| G with a road tool | Toggle tile-centre grid snap |
-| Alt while drawing | Place the point exactly under the pointer |
-| C | Cycle road drawing: Straight, Curved, Smooth |
-| O, T, Y | Roundabout, Signal (click a signalised junction to edit its plan), One-way |
-| 1, 2, 3 | Homes, Shops, Industry |
-| B | Bulldoze |
-| P | Pollution view |
-| Ctrl+Z | Undo the last edit |
-| Space | Pause |
-| H | Help |
+Les routes se posent librement, et le zonage les suit. Avec un outil zone en main, chaque rue riveraine montre ses rangées de cases le long du trottoir, jusqu'à trois de profondeur, quel que soient l'angle ou la courbe. Peignez au pinceau (trois tailles ; Maj + glisser dézone, 5 $ la case). Les bâtiments tiennent en entier dans leurs cases, en rangées face à la route. Le long d'une route à moins de 10° de la grille, les cases tombent sur les tuiles comme toujours. À l'intérieur d'une courbe serrée, les rangées s'éclaircissent au lieu de se chevaucher. Une rue à deux voies en accrochage grille remplit un carré, une avenue un corridor de trois carrés. Une avenue coûte 180 $/case et trois fois l'entretien d'une rue, pour les trois tuiles prises. Les grands sites restent sur la grille, et les ruelles arrière ne courent que derrière des rangées d'équerre.
 
-The city autosaves in your browser, and **Share** copies a link that contains the whole city.
+## Contrôles
 
-## How it works
+| Entrée | Action |
+|---|---|
+| Clic gauche | Poser points de route, feux, ronds-points et bâtiments de service |
+| Glisser gauche | Peindre les cases de zone le long des routes (Maj + glisser dézone) ; raser un rectangle (un glisser pose aussi une route seule) |
+| Clic droit / Échap | Arrêter une route ; Échap range l'outil, ferme les panneaux et l'inspection |
+| Glisser droit, Q / E | Pivoter |
+| ZQSD / flèches, glisser milieu | Déplacer |
+| Molette | Zoom |
+| I | Inspecter un bâtiment et ses conditions de croissance |
+| L, R, V, X | Ruelle, Rue, Avenue, Voie rapide |
+| + / − | Niveau du prochain point : tunnel, sol, ou 1–3 étages (rampes entre) |
+| K, J | Stops, rue apaisée |
+| G, clic droit | Pivoter le bâtiment en main avant de le poser |
+| F | Marcher dans les rues à hauteur d'yeux ; Échap ou F pour remonter |
+| M | Conduire en ville ; V passe en place conducteur ; Échap ou M pour se garer |
+| U | Élargir une route d'un cran (glisser pour un tronçon) |
+| N, Z | Modifier routes (glisser points et virages), Couper routes |
+| Ajouter une voie (panneau Routes) | Glisser le long d'un côté pour y ajouter une voie ; Maj + glisser retire |
+| G avec un outil route | Bascule l'accrochage au centre des cases |
+| Alt en dessinant | Pose le point exactement sous le pointeur |
+| C | Change le tracé : Droite, Courbe, Fluide |
+| O, T, Y | Rond-point, Feux (cliquez un carrefour à feux pour éditer son plan), Sens unique |
+| 1, 2, 3 | Logements, Boutiques, Industrie |
+| B | Démolir |
+| P | Vue pollution |
+| Ctrl+Z | Annuler la dernière modification |
+| Espace | Pause |
+| H | Aide |
 
-- Vite + TypeScript + [three.js](https://threejs.org/), no UI framework.
-- **Roads** are a graph of nodes joined by quadratic Bezier segments (`src/roads/network.ts`). Inserting a
-  road snaps its ends, splits every segment it crosses, and creates junction nodes. Roundabouts cut the
-  roads that cross a circle and join them with one-way arcs. Road points are snapped by
-  `src/roads/snap.ts` (joins, guide lines, 15° steps). Edits (`moveNode`, `bendSeg`, `cutRange`,
-  `setKindRange`) are planned on a scratch copy of the network by `src/roadEdit.ts`, which prices and
-  checks them for the preview, then swaps the copy in as one undoable change.
-- **Signals** (`src/roads/signals.ts`): a plan is a list of phases, each with a green time and a state
-  for movements keyed by the segments they come in and go out on. Plans live on nodes and move with
-  splits and reversals; one that no longer fits its junction gives way to the default. The traffic
-  worker runs a phase clock per signal (adaptive ones reading the queues four times a second) and sends
-  the clocks with every frame for the lamps.
-- **Lanes** (`src/roads/lanes.ts`): a segment stores only the lanes added or removed on each side
-  (`addR`, `addL`), so default roads are laid out exactly as before. The module works out lane
-  positions, tapers where widths change, which lane carries on into which across a node, and each
-  approach's turn lanes. In the traffic worker every lane is its own queue; cars change lanes with a
-  gap check, and a junction admits any car whose movement (sampled from the same corner curves the
-  cars drive) does not overlap a car already crossing, with the longest waiter reserving the box.
-- **Zone cells follow the roads; the simulation stays on tiles.** The network is rasterized onto the tile
-  grid (`src/roads/raster.ts`): tiles under a road are reserved, and road-aligned cells (up to three rows
-  per side, dropped where they would touch a road or another cell) are each matched to one tile, which
-  takes the cell's position, facing and road access. The worker and saves keep working per tile.
-  Straight roadside lots meet narrow curbs; intersecting lot shifts are rejected at junctions.
-- **Building variety:** four deterministic designs per zone and level vary height, proportions and roof details.
-  Level 2 homes have three to five floors. Designs remain stable across saves and do not change simulation capacity.
-- **The simulation runs in a Web Worker** at 30 Hz (`src/sim/worker.ts`): A* routing over the road graph
-  with congestion-aware costs, car-following with minimum gaps, junction locks, signal phases, utilities,
-  pollution diffusion, growth, and the economy. Cars that are stuck for 30 seconds give up and despawn.
-- **Rendering** is a handful of draw calls: the whole road network is one vertex-colored mesh that is
-  re-tinted by congestion, buildings and cars are `InstancedMesh`, and pollution is a 80×80 texture.
-- **Day and night:** an eight-minute simulation day starts at 09:00. The city clock, sunlight, dusk, moonlight, glowing windows and streetlights follow pause/speed controls and saved city time.
-- **Landscape:** seeded hills surround a flat, buildable valley; mixed forests clear around roads and occupied lots. Rivers have irregular banks, moving ripples, rocks and an upstream waterfall with spray. Highway entrances cut clear corridors through the hills. Existing saves retain their river and buildable grid.
-- **Save format:** v7 header with the seed and earned city level, RLE tiles, then the road network at 5 bytes per node and 9 per
-  segment (including bridge/tunnel flags), followed by a length-prefixed incident snapshot; base64url-encoded into `#c=...`.
+La ville se sauvegarde dans votre navigateur, et **Partager** copie un lien qui contient toute la ville.
 
-## Develop
+## Fonctionnement
+
+- Vite + TypeScript + [three.js](https://threejs.org/), sans framework UI.
+- **Routes** : un graphe de nœuds reliés par segments de Bézier quadratiques (`src/roads/network.ts`). Insérer une route accroche ses bouts, coupe chaque segment croisé et crée des nœuds de carrefour. Les ronds-points coupent les routes qui traversent le cercle et les relient par des arcs à sens unique. Les points sont accrochés par `src/roads/snap.ts` (jonctions, guides, pas de 15°). Les modifications (`moveNode`, `bendSeg`, `cutRange`, `setKindRange`) sont planifiées sur une copie de travail par `src/roadEdit.ts`, qui les chiffre et les vérifie pour l'aperçu, puis l'échange en une modification annulable.
+- **Feux** (`src/roads/signals.ts`) : un plan est une liste de phases, chacune avec un temps de vert et un état pour les mouvements repérés par leurs segments d'entrée et de sortie. Les plans vivent sur les nœuds et suivent coupes et inversions ; un plan devenu incompatible cède la place au défaut. Le worker trafic fait tourner une horloge par feu (les adaptatifs lisant les files quatre fois par seconde) et envoie les horloges à chaque image pour les lanternes.
+- **Voies** (`src/roads/lanes.ts`) : un segment ne stocke que les voies ajoutées ou retirées de chaque côté (`addR`, `addL`) : les routes par défaut restent comme avant. Le module calcule positions, fuselages aux changements de largeur, continuités des voies aux nœuds et voies de direction par entrée. Dans le worker, chaque voie est sa propre file ; les voitures changent de voie avec contrôle d'intervalle, et un carrefour admet toute voiture dont le mouvement (échantillonné sur les mêmes courbes que les trajectoires) ne chevauche aucune voiture engagée, le plus long en attente réservant le carrefour.
+- **Les cases suivent les routes ; la simulation reste sur tuiles.** Le réseau est rastérisé sur la grille (`src/roads/raster.ts`) : les tuiles sous une route sont réservées, et les cases alignées (jusqu'à trois rangées par côté, abandonnées si elles toucheraient une route ou une autre case) sont chacune appariées à une tuile, qui prend position, orientation et accès routier de la case. Worker et sauvegardes restent par tuile. Les lots droits rejoignent les bordures étroites ; les mouvements en conflit sont refusés aux carrefours.
+- **Variété des bâtiments :** quatre designs déterministes par zone et niveau varient hauteur, proportions et toitures. Les logements de niveau 2 ont trois à cinq étages. Les designs restent stables entre sauvegardes et ne changent pas les capacités.
+- **La simulation tourne dans un Web Worker** à 30 Hz (`src/sim/worker.ts`) : routage A* sur le graphe avec coûts sensibles à la congestion, suivi de véhicule à intervalles minimaux, verrous de carrefour, phases de feux, réseaux, diffusion de pollution, croissance et économie. Les voitures bloquées 30 secondes abandonnent et disparaissent.
+- **Rendu** en peu d'appels : tout le réseau routier est un seul maillage teinté par congestion, bâtiments et voitures sont en `InstancedMesh`, et la pollution une texture 80 × 80.
+- **Jour et nuit :** un jour simulé de huit minutes commence à 09:00. Horloge, soleil, crépuscule, lune, fenêtres allumées et réverbères suivent pause, vitesses et heure sauvegardée.
+- **Paysage :** des collines par graine entourent une vallée plate constructible ; les forêts mixtes s'effacent autour des routes et des lots occupés. Rivières aux berges irrégulières, vaguelettes animées, rochers et cascade d'amont avec embruns. Les entrées d'autoroute taillent des corridors dans les collines. Les sauvegardes gardent leur rivière et leur grille.
+- **Format de sauvegarde :** en-tête v7 avec graine et niveau acquis, tuiles en RLE, puis réseau à 5 octets par nœud et 9 par segment (dont ponts/tunnels), suivi d'un instantané d'incidents à longueur préfixée ; le tout en base64url dans `#c=...`.
+
+## Développer
 
 ```bash
 npm install
 npm run dev
 ```
 
-`npm test` runs progression, save migration, coverage, geometry and simulation checks (Node 22.18+).
+`npm test` lance progression, migrations, couverture, géométrie et simulation (Node 22.18+).
 
-`npm run test:soak` checks 30-minute growth, service withdrawal, live traffic and debt recovery scenarios with seeded randomness.
+`npm run test:soak` vérifie croissance 30 minutes, retrait de services, trafic réel et sortie de dette, en aléatoire par graine.
 
-`npm run build` writes a static site to `dist/`. Pushing to `main` deploys it to GitHub Pages via
-the workflow in `.github/workflows/deploy.yml`.
+`npm run build` écrit un site statique dans `dist/`. Pousser sur `main` le déploie sur GitHub Pages via le workflow `.github/workflows/deploy.yml`.
 
-## Not in it
+## Déployer (GitHub Pages)
 
-Individual citizens (people and trips are counted, not simulated one by one), a map bigger than 80 × 80
-cells, and terraforming of the hills: they stay scenic, and the building grid stays level.
+1. Poussez ce code sur `main` de votre fork.
+2. Sur GitHub : **Settings → Pages → Source → GitHub Actions**.
+3. Si aucun run ne démarre : **Settings → Actions → General → Allow all actions**, puis **Actions → Deploy to GitHub Pages → Run workflow**.
+4. Le jeu est en ligne à `https://<votre-pseudo>.github.io/gridburg/`.
 
-MIT license.
+## Absent du jeu
 
-## Road construction
+Pas d'habitants individuels (gens et trajets comptés, pas simulés un par un), pas de carte au-delà de 80 × 80 cases, et pas de terrassement des collines : elles restent décoratives, et la grille reste à niveau.
 
-Bridges and tunnels are not separate tools: pick any road and change its height. **+** raises it to a
-bridge, **−** lowers it to a tunnel, and the Height control in the Roads panel shows where you are.
-Any kind of road can be raised or buried, so an avenue viaduct or an expressway tunnel is a matter of
-drawing it at that height. Allow at least 8 cells and two clear, dry ends for the automatic ramps; decks sit low, just clearing the traffic underneath.
-A tunnel shows its portals above ground at each end, and a dark band with pale ticks marks the ground
-over the bore, so the route is legible without opening the underground view.
-A surface road crossing water still becomes a bridge by itself. Spans connect at their ends and pass
-crossing roads without a junction; Upgrade widens one a step. Structural cost and upkeep are 3× for
-bridges and 4× for tunnels. Surface zoning cannot use a bridge or tunnel as frontage; underground
-interiors leave the surface available for building.
-
-Bridge/tunnel spans must be removed with Bulldoze and redrawn to change their shape; their ends remain at ground level. Cyan dashes show underground routes while road tools are selected. Saves from versions 3–6 still load.
+Licence MIT.

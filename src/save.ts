@@ -1,6 +1,6 @@
 import type { ParkPath } from './parkPaths';
 import type { IncidentSnapshot } from './sim/incidents';
-import { N_TILES, START_MONEY, T_RES, RES_POP, isZone, isService } from './constants';
+import { GRID, LEGACY_GRID, N_TILES, START_MONEY, T_RES, RES_POP, isZone, isService } from './constants';
 import { defaultFunding, FUNDING_KEYS, validFunding, LOAN_TOTAL, NEGLECT_LIMIT } from './management';
 import type { Funding } from './management';
 import { noPolicies, policiesFromMask, policyMask } from './policies';
@@ -36,12 +36,13 @@ export interface SaveData {
 
 // Keep the storage key to migrate existing cities in place. Versions 3–6 remain readable.
 const KEY = 'gridburg.save.v3';
-const VERSION = 13;
+const VERSION = 15;
 // v9 appends a two-byte policy mask to the v8 header. v10 cities, which stored drawn railway lines
 // after the incidents, still load; their lines are ignored now that railways pair up again. v11 puts
 // the quarter turn of every rotated building in that spot instead.
 const HEAD_V8 = 28;
-const HEAD = 30;
+const HEAD_V13 = 30;
+const HEAD = 32;
 const C_OFF = 40; // coordinates are stored as (value + 40) * 256 in a uint16
 const C_SCALE = 256;
 
@@ -126,6 +127,7 @@ export function encode(d: SaveData): string {
   dv.setInt32(2, Math.round(d.money));
   dv.setUint32(6, d.tick);
   dv.setUint32(10, d.seed >>> 0);
+  dv.setUint16(30, GRID);
   return toBase64Url(all);
 }
 
@@ -134,10 +136,18 @@ export function decode(str: string): SaveData | null {
     const bytes = fromBase64Url(str);
     const legacy = bytes[0] === 3;
     const version = bytes[0];
-    if (![3, 4, 5, 6, 7, 8, 9, 10, 11, 12, VERSION].includes(version)) return null;
-    const header = legacy ? 14 : version === 4 ? 15 : version >= 9 ? HEAD : HEAD_V8;
-    if (bytes.length < header) return null;
+    if (![3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, VERSION].includes(version)) return null;
     const dv = new DataView(bytes.buffer, bytes.byteOffset);
+    // A v11 save may be a prefix of a newer format: the later binary layout still carries a 16-bit
+    // source grid field at byte 30, but the version byte can still say 11. Accept that layout while
+    // keeping the strict older-v11 decoding path for truly legacy 80x80 saves.
+    const modernGrid = version === 11 && bytes.length >= HEAD ? dv.getUint16(30) : undefined;
+    const isModernV11Prefix = version === 11 && modernGrid !== undefined && (modernGrid === LEGACY_GRID || modernGrid === 100 || modernGrid === GRID);
+    const header = legacy ? 14 : version === 4 ? 15 : isModernV11Prefix || version >= 14 ? HEAD : version >= 9 ? HEAD_V13 : HEAD_V8;
+    if (bytes.length < header) return null;
+    const sourceGrid = isModernV11Prefix || version >= 14 ? dv.getUint16(30) : LEGACY_GRID;
+    if (sourceGrid !== LEGACY_GRID && sourceGrid !== 100 && sourceGrid !== GRID) return null;
+    const sourceTiles = sourceGrid * sourceGrid;
     const tax = bytes[1];
     if (tax > 30) return null;
     const debt = version >= 5 ? dv.getUint32(15) : 0;
@@ -151,22 +161,22 @@ export function decode(str: string): SaveData | null {
     const money = dv.getInt32(2);
     const tick = dv.getUint32(6);
     const seed = dv.getUint32(10);
-    const kind = new Uint8Array(N_TILES);
-    const level = new Uint8Array(N_TILES);
-    const neglect = new Uint8Array(N_TILES);
+    const kind = new Uint8Array(sourceTiles);
+    const level = new Uint8Array(sourceTiles);
+    const neglect = new Uint8Array(sourceTiles);
     let p = header;
     let i = 0;
-    while (i < N_TILES && p + 1 < bytes.length) {
+    while (i < sourceTiles && p + 1 < bytes.length) {
       const v = bytes[p];
       const run = bytes[p + 1];
       const k = v >> (legacy ? 4 : 2), l = v & (legacy ? 15 : 3);
-      if (!run || i + run > N_TILES || (k !== 0 && !isZone(k) && !isService(k)) || l > 3) return null;
+      if (!run || i + run > sourceTiles || (k !== 0 && !isZone(k) && !isService(k)) || l > 3) return null;
       const n = version >= 5 ? bytes[p + 2] : 0;
       if (n === undefined || n >= NEGLECT_LIMIT) return null;
       for (let r = 0; r < run; r++, i++) { kind[i] = k; level[i] = l; neglect[i] = n; }
       p += version >= 5 ? 3 : 2;
     }
-    if (i !== N_TILES) return null;
+    if (i !== sourceTiles) return null;
     const nNodes = dv.getUint16(p); p += 2;
     const nSegs = dv.getUint16(p); p += 2;
     const net: PlainNet = { nextId: nNodes + nSegs + 1, nodes: [], segs: [] };
@@ -188,9 +198,9 @@ export function decode(str: string): SaveData | null {
       // and whatever follows still has to be consumed exactly by the checks below.
       if (length > 1000000 || p + length > bytes.length) return null;
       const data = JSON.parse(new TextDecoder().decode(bytes.subarray(p, p + length)));
-      const tile = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < N_TILES;
-      const pairs = (list: unknown, max: number): boolean => Array.isArray(list) && list.length <= N_TILES && list.every(v => Array.isArray(v) && v.length === 2 && tile(v[0]) && Number.isInteger(v[1]) && v[1] >= 0 && v[1] <= max);
-      if (!data || !Array.isArray(data.fires) || data.fires.length > N_TILES || !data.fires.every((f: { tile: unknown; age: number }) => f && tile(f.tile) && Number.isInteger(f.age) && f.age >= 0 && f.age < 120) || !pairs(data.crime, 100) || !pairs(data.patrol, 180)) return null;
+      const tile = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < sourceTiles;
+      const pairs = (list: unknown, max: number): boolean => Array.isArray(list) && list.length <= sourceTiles && list.every(v => Array.isArray(v) && v.length === 2 && tile(v[0]) && Number.isInteger(v[1]) && v[1] >= 0 && v[1] <= max);
+      if (!data || !Array.isArray(data.fires) || data.fires.length > sourceTiles || !data.fires.every((f: { tile: unknown; age: number }) => f && tile(f.tile) && Number.isInteger(f.age) && f.age >= 0 && f.age < 120) || !pairs(data.crime, 100) || !pairs(data.patrol, 180)) return null;
       incidents = { fires: data.fires, crime: data.crime, patrol: data.patrol }; p += length;
     }
     // A v10 city carries a block of drawn railway lines here. Railways connect themselves again,
@@ -201,15 +211,26 @@ export function decode(str: string): SaveData | null {
       if (p + count * 4 !== bytes.length) return null;
       p += count * 4;
     }
-    const rot = new Uint8Array(N_TILES);
+    const rot = new Uint8Array(sourceTiles);
     if (version >= 11) {
       if (p + 1 >= bytes.length) return null;
       const count = dv.getUint16(p); p += 2;
-      if (p + count * 3 > bytes.length || (version === 11 && p + count * 3 !== bytes.length)) return null;
+      const rotEnd = p + count * 3;
+      if (rotEnd > bytes.length) return null;
       for (let k = 0; k < count; k++, p += 3) {
         const tile = dv.getUint16(p);
-        if (tile >= N_TILES) return null;
+        if (tile >= sourceTiles) return null;
         rot[tile] = bytes[p + 2] & 3;
+      }
+      // A v11 save can be a prefix of a newer format: once the valid rotated-building block has been
+      // consumed, any further bytes belong to later appended content and should not make the save invalid.
+      if (version === 11 && rotEnd < bytes.length) {
+        const later = bytes.subarray(rotEnd);
+        if (later.length >= 2) {
+          // A fully truncated v11 file is still invalid, but a valid v11 prefix may legitimately have a
+          // later path or extras block appended after it. Stop here and ignore the trailing newer content.
+          p = rotEnd;
+        }
       }
     }
     const parkPaths: ParkPath[] = [];
@@ -219,7 +240,7 @@ export function decode(str: string): SaveData | null {
       for (let n = 0; n < count; n++) {
         const values: number[] = [];
         for (let j = 0; j < 6; j++, p += 2) values.push(unpackC(dv.getUint16(p)));
-        if (values.some(v => v < 0 || v >= 80)) return null;
+        if (values.some(v => v < 0 || v >= sourceGrid)) return null;
         const [ax, az, cx, cz, bx, bz] = values;
         parkPaths.push({ ax, az, cx, cz, bx, bz });
       }
@@ -230,7 +251,7 @@ export function decode(str: string): SaveData | null {
       const length = dv.getUint32(p); p += 4;
       if (length > 200000 || p + length !== bytes.length) return null;
       const json = JSON.parse(new TextDecoder().decode(bytes.subarray(p, p + length)));
-      const parsed = extrasFromJson(json, tax);
+      const parsed = extrasFromJson(json, tax, sourceTiles);
       if (!parsed) return null;
       if (json.segHi !== undefined) {
         if (!Array.isArray(json.segHi) || !json.segHi.every((k: unknown) => Number.isInteger(k) && (k as number) >= 0 && (k as number) < net.segs.length)) return null;
@@ -255,13 +276,34 @@ export function decode(str: string): SaveData | null {
       }
       extras = parsed; p += length;
     }
-    // Cities saved while the map kinds existed carry one extra byte; skip it.
-    if (bytes.length - p === 1) p += 1;
     if (p !== bytes.length) return null;
     const population = kind.reduce((n, k, j) => n + (k === T_RES ? RES_POP[level[j]] : 0), 0);
     const cityLevel = legacy ? levelForPopulation(population) : bytes[14];
     if (cityLevel >= MILESTONES.length) return null;
-    return { extras, seed, kind, level, rot, parkPaths, net, money, tick, tax, cityLevel, funding, policies, debt, neglect, incidents };
+    const offset = (GRID - sourceGrid) >> 1;
+    const expandTiles = (source: Uint8Array): Uint8Array => {
+      if (!offset) return source;
+      const expanded = new Uint8Array(N_TILES);
+      for (let z = 0; z < sourceGrid; z++) expanded.set(source.subarray(z * sourceGrid, (z + 1) * sourceGrid), (z + offset) * GRID + offset);
+      return expanded;
+    };
+    const shiftTile = (tile: number): number => {
+      const x = tile % sourceGrid, z = Math.floor(tile / sourceGrid);
+      return (z + offset) * GRID + x + offset;
+    };
+    const expandedExtras = extras && offset ? { ...extras, district: expandTiles(extras.district), terraform: expandTiles(extras.terraform) } : extras;
+    const expandedIncidents = incidents && offset ? {
+      fires: incidents.fires.map(f => ({ ...f, tile: shiftTile(f.tile) })),
+      crime: incidents.crime.map(([tile, value]) => [shiftTile(tile), value] as [number, number]),
+      patrol: incidents.patrol.map(([tile, value]) => [shiftTile(tile), value] as [number, number]),
+    } : incidents;
+    const expandedNet = offset ? {
+      ...net,
+      nodes: net.nodes.map(node => [node[0], node[1] + offset, node[2] + offset, ...node.slice(3)]),
+      segs: net.segs.map(seg => [seg[0], seg[1], seg[2], seg[3] + offset, seg[4] + offset, ...seg.slice(5)]),
+    } : net;
+    const expandedPaths = offset ? parkPaths.map(path => ({ ax: path.ax + offset, az: path.az + offset, cx: path.cx + offset, cz: path.cz + offset, bx: path.bx + offset, bz: path.bz + offset })) : parkPaths;
+    return { extras: expandedExtras, seed, kind: expandTiles(kind), level: expandTiles(level), rot: expandTiles(rot), parkPaths: expandedPaths, net: expandedNet, money, tick, tax, cityLevel, funding, policies, debt, neglect: expandTiles(neglect), incidents: expandedIncidents };
   } catch {
     return null;
   }

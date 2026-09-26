@@ -1,5 +1,8 @@
 import { MIN_GREEN, MAX_GREEN, DEFAULT_GREEN, clonePlan } from '../roads/signals';
 import type { SignalPlan, MoveState } from '../roads/signals';
+import { getLang } from '../i18n';
+
+const L = (en: string, fr: string): string => getLang() === 'fr' ? fr : en;
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -61,18 +64,18 @@ export class SignalPanel {
     const a = this.actions;
     this.root.replaceChildren();
     const head = el('div', 'signal-head');
-    head.append(el('div', 'ptitle', 'Traffic signal'));
-    const x = el('button', 'signal-x', '×'); x.title = 'Close'; x.addEventListener('click', () => a.close());
+    head.append(el('div', 'ptitle', L('Traffic signal', 'Feux de circulation')));
+    const x = el('button', 'signal-x', '×'); x.title = L('Close', 'Fermer'); x.addEventListener('click', () => a.close());
     head.append(x);
     this.root.append(head);
-    this.root.append(el('p', 'pnote', 'Pick a phase, then click the arrows over the junction: green, green giving way (amber), or stop (red).'));
+    this.root.append(el('p', 'pnote', L('Pick a phase, then click the arrows over the junction: green, green giving way (amber), or stop (red).', 'Choisissez une phase, puis cliquez sur les flèches du carrefour : vert, vert avec priorité (orange) ou arrêt (rouge).')));
     const list = el('div', 'signal-phases');
     plan.phases.forEach((p, i) => {
       const row = el('div', `signal-phase${i === this.phase ? ' active' : ''}`);
-      const name = el('button', 'signal-name', `Phase ${i + 1}`);
+      const name = el('button', 'signal-name', `${L('Phase', 'Phase')} ${i + 1}`);
       name.addEventListener('click', () => a.select(i));
       const count = Object.keys(p.moves).length;
-      const moves = el('span', 'signal-count', `${count} go`);
+      const moves = el('span', 'signal-count', `${count} ${L('go', 'passages')}`);
       const minus = el('button', 'signal-step', '−'), plus = el('button', 'signal-step', '+');
       const secs = el('span', 'signal-secs', `${p.green} s`);
       const edit = (d: number): void => {
@@ -82,7 +85,7 @@ export class SignalPanel {
       };
       minus.addEventListener('click', () => edit(-1));
       plus.addEventListener('click', () => edit(1));
-      const del = el('button', 'signal-step', '✕'); del.title = 'Remove this phase';
+      const del = el('button', 'signal-step', '✕'); del.title = L('Remove this phase', 'Supprimer cette phase');
       del.disabled = plan.phases.length <= 1;
       del.addEventListener('click', () => {
         const next = clonePlan(plan);
@@ -93,7 +96,7 @@ export class SignalPanel {
       list.append(row);
     });
     this.root.append(list);
-    const add = el('button', 'mitem', '+ Add a phase');
+    const add = el('button', 'mitem', L('+ Add a phase', '+ Ajouter une phase'));
     add.addEventListener('click', () => {
       const next = clonePlan(plan);
       next.phases.push({ green: DEFAULT_GREEN, moves: {} });
@@ -102,10 +105,10 @@ export class SignalPanel {
     const adaptive = el('label', 'signal-adaptive');
     const box = el('input'); box.type = 'checkbox'; box.checked = !!plan.adaptive;
     box.addEventListener('change', () => { const next = clonePlan(plan); if (box.checked) next.adaptive = true; else delete next.adaptive; a.commit(next, this.phase); });
-    adaptive.append(box, el('span', undefined, 'Adaptive: cut empty phases short, stretch busy ones'));
+    adaptive.append(box, el('span', undefined, L('Adaptive: cut empty phases short, stretch busy ones', 'Adaptatif : raccourcit les phases vides et prolonge celles qui sont chargées')));
     const buttons = el('div', 'signal-buttons');
-    const reset = el('button', 'mitem', 'Reset to default'); reset.addEventListener('click', () => a.reset());
-    const remove = el('button', 'mitem signal-remove', 'Remove signal'); remove.addEventListener('click', () => a.remove());
+    const reset = el('button', 'mitem', L('Reset to default', 'Rétablir le plan par défaut')); reset.addEventListener('click', () => a.reset());
+    const remove = el('button', 'mitem signal-remove', L('Remove signal', 'Supprimer les feux')); remove.addEventListener('click', () => a.remove());
     buttons.append(reset, remove);
     this.root.append(add, adaptive, buttons);
   }

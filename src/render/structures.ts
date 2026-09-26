@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GRID } from '../constants';
 import { roadHalf } from '../roads/lanes';
 import { Network } from '../roads/network';
 import type { RSeg } from '../roads/network';
@@ -8,7 +9,7 @@ import { MeshBuilder } from './meshBuilder';
 import { SweepBuilder, straightPath } from './sweep';
 import type { SweepPoint, ProfileVertex } from './sweep';
 
-const OFFSET = 40; // GRID / 2: tile space to world space
+const OFFSET = GRID / 2;
 const CONCRETE = 0xb9b4a8;
 const BAND = 0x8d8a82;
 const SOFFIT = 0x9e9a90;

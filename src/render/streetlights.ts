@@ -2,6 +2,7 @@ import { roadHeight } from '../roads/structures';
 import { sideHalf, roadHalf } from '../roads/lanes';
 import * as THREE from 'three';
 import { KIND_RAMP, Network } from '../roads/network';
+import { GRID } from '../constants';
 
 /** Instanced lamps and soft pools avoid hundreds of real-time point lights. */
 export class StreetlightLayer {
@@ -45,7 +46,7 @@ export class StreetlightLayer {
         const base = roadHeight(seg, seg.cum[i]);
         if ([...net.segs.values()].some(o => o.structure === 1 && o.id !== seg.id && (() => { const h = Network.nearestOn(o, px, pz); return h.dist < roadHalf(o) + 1.0 && roadHeight(o, h.s) > base + 0.3; })())) continue;
         next = seg.cum[i] + 5;
-        obj.position.set(px - 40, roadHeight(seg, seg.cum[i]) + 0.65, pz - 40);
+        obj.position.set(px - GRID / 2, roadHeight(seg, seg.cum[i]) + 0.65, pz - GRID / 2);
         obj.updateMatrix(); this.poles.setMatrixAt(count, obj.matrix);
         obj.position.y = roadHeight(seg, seg.cum[i]) + 1.3; obj.updateMatrix(); this.bulbs.setMatrixAt(count, obj.matrix);
         obj.position.y = roadHeight(seg, seg.cum[i]) + 0.061; obj.updateMatrix(); this.pools.setMatrixAt(count++, obj.matrix);

@@ -327,3 +327,307 @@ export function milestoneUnlocks(index: number, english: string): string {
   if (current !== 'fr') return english;
   return MILESTONE_FR[index]?.unlocks ?? english;
 }
+
+// ---- achievements ----
+
+const ACHIEVEMENTS_FR: Record<string, { title: string; text: string }> = {
+  'first-home': { title: 'Jour d’emménagement', text: 'La première famille s’installe' },
+  'village': { title: 'Sur la carte', text: 'Grandir en village' },
+  'town': { title: 'Petite ville', text: 'Atteindre 400 habitants' },
+  'city': { title: 'Statut de cité', text: 'Atteindre 1 800 habitants' },
+  'metropolis': { title: 'Métropole', text: 'Atteindre 6 500 habitants' },
+  'megalopolis': { title: 'Mégalopole', text: 'Atteindre 10 000 habitants' },
+  'world': { title: 'Ville mondiale', text: 'Atteindre 15 000 habitants' },
+  'happy': { title: 'Ville heureuse', text: 'Bonheur à 90 avec 1 000 habitants' },
+  'rich': { title: 'Plein aux as', text: '100 000 $ dans la trésorerie' },
+  'clean-power': { title: 'Énergie propre', text: '3 000 MW sans centrale à charbon ni à gaz' },
+  'nuclear': { title: 'Atome scindé', text: 'Construire une centrale nucléaire' },
+  'landmark': { title: 'Sur les cartes postales', text: 'Construire une tour d’observation' },
+  'transit': { title: 'En voiture tout le monde', text: '200 passagers de transport par minute' },
+  'tourists': { title: 'Bons baisers de Gridburg', text: '300 visiteurs par minute' },
+  'exporter': { title: 'Fabriqué ici', text: 'Exporter 500 unités de marchandises par minute' },
+  'value': { title: 'Belle adresse', text: 'Valeur moyenne du sol de 60 avec 2 000 habitants' },
+  'clean': { title: 'Ville propre', text: 'Moins de 5 % de déchets avec 1 500 habitants' },
+  'commute': { title: 'Trajet express', text: 'Trajets sous les 20 s avec 3 000 habitants' },
+  'survivor': { title: 'Tempête essuyée', text: 'Survivre à une inondation ou une tornade' },
+  'districts': { title: 'Urbaniste', text: 'Créer trois quartiers' },
+  'terraform': { title: 'Remue-ménage', text: 'Creuser ou remblayer vingt cases' },
+};
+
+export function achievementTitle(id: string, fallback: string): string {
+  if (current !== 'fr') return fallback;
+  return ACHIEVEMENTS_FR[id]?.title ?? fallback;
+}
+
+export function achievementText(id: string, fallback: string): string {
+  if (current !== 'fr') return fallback;
+  return ACHIEVEMENTS_FR[id]?.text ?? fallback;
+}
+
+// ---- map views ----
+
+const MAP_VIEWS_FR: Record<string, { label: string; note: string }> = {
+  none: { label: 'Normale', note: 'Vue classique de la ville' },
+  land: { label: 'Valeur du sol', note: 'Vert = recherché, rouge = délaissé' },
+  wellbeing: { label: 'Bien-être', note: 'Satisfaction de chaque foyer' },
+  noise: { label: 'Bruit', note: 'Trafic, industrie, vie nocturne, aéroport' },
+  crime: { label: 'Délinquance', note: 'Où les patrouilles sont requises' },
+  garbage: { label: 'Déchets', note: 'Poubelles en attente de collecte' },
+  districts: { label: 'Quartiers', note: 'Quartiers délimités et leurs noms' },
+  flood: { label: 'Risque d’inondation', note: 'Terres basses inondables' },
+};
+
+export function mapViewText(id: string, fallback: { label: string; note: string }): { label: string; note: string } {
+  if (current !== 'fr') return fallback;
+  return MAP_VIEWS_FR[id] ?? fallback;
+}
+
+// ---- roundabout ring sizes ----
+
+const RING_FR: Record<string, { label: string; hint: string }> = {
+  auto: { label: 'Adapté aux routes', hint: 'L’anneau s’adapte à la route la plus large' },
+  single: { label: 'Une voie', hint: 'Un petit anneau à une voie, pour rues et ruelles' },
+  double: { label: 'Deux voies', hint: 'Un anneau taille avenue à deux voies' },
+  grand: { label: 'Grand', hint: 'Un large anneau à deux voies pour beaucoup de trafic' },
+};
+
+export function ringSizeText(id: string, fallback: { label: string; hint: string }): { label: string; hint: string } {
+  if (current !== 'fr') return fallback;
+  return RING_FR[id] ?? fallback;
+}
+
+// ---- garage, cars, parts and racing ----
+
+const MODELS_FR: Record<string, { name: string; blurb: string }> = {
+  hatch: { name: 'Citadine compacte', blurb: 'Votre première voiture : légère, maniable et sage' },
+  coupe: { name: 'Coupé sport', blurb: 'Bas et vif, avec aileron arrière' },
+  rally: { name: 'Voiture de rallye', blurb: 'Conçue pour glisser : accroche et drift à volonté' },
+  muscle: { name: 'Muscle car', blurb: 'Foudroyante en ligne droite, joueuse en virage' },
+  super: { name: 'Supercar', blurb: 'Le bolide le plus rapide de la ville' },
+};
+
+export function carModelText(id: string, fallback: { name: string; blurb: string }): { name: string; blurb: string } {
+  if (current !== 'fr') return fallback;
+  return MODELS_FR[id] ?? fallback;
+}
+
+const PARTS_FR: Record<string, { name: string; effect: string }> = {
+  engine: { name: 'Moteur', effect: 'Vitesse de pointe et accélération' },
+  turbo: { name: 'Nitro', effect: 'Une poussée accrue avec Maj' },
+  tyres: { name: 'Pneus', effect: 'Adhérence en virage' },
+  suspension: { name: 'Suspension', effect: 'Direction plus vive, moins de roulis' },
+  brakes: { name: 'Freins', effect: 'Freinage plus court' },
+};
+
+export function carPartText(id: string, fallback: { name: string; effect: string }): { name: string; effect: string } {
+  if (current !== 'fr') return fallback;
+  return PARTS_FR[id] ?? fallback;
+}
+
+const RACE_KINDS_FR: Record<string, { label: string; blurb: string }> = {
+  circuit: { label: 'Circuit', blurb: 'Boucle fermée contre trois rivaux' },
+  sprint: { label: 'Sprint', blurb: 'D’un point à un autre contre trois rivaux' },
+  drift: { label: 'Drift', blurb: 'Glissez sur la boucle pour battre le score' },
+  drag: { label: 'Départ arrêté', blurb: 'Plein gaz en ligne droite : soignez le départ' },
+  police: { label: 'Poursuite', blurb: 'Rejoignez l’arrivée avec la police aux trousses' },
+};
+
+export function raceKindText(id: string, fallback: { label: string; blurb: string }): { label: string; blurb: string } {
+  if (current !== 'fr') return fallback;
+  return RACE_KINDS_FR[id] ?? fallback;
+}
+
+// ---- inspector strings ----
+
+const INSPECTOR_EXACT_FR: Record<string, string> = {
+  'Waiting for construction': 'En attente de construction',
+  'Maximum building level': 'Niveau de bâtiment maximum',
+  'Operating': 'En service',
+  'Not operating': 'À l’arrêt',
+  'Eligible for growth; construction occurs gradually.': 'Prêt à grandir ; la construction se fait progressivement.',
+  'Airport runway clearance: no new construction or building upgrades': 'Dégagement de piste d’aéroport : aucune construction ni surélévation autorisée',
+  'Demand is too low: balance homes, jobs and taxes': 'Demande trop faible : équilibrez logements, emplois et taxes',
+  'Move polluting industry away from homes': 'Éloignez l’industrie polluante des habitations',
+  'This district has a high-rise ban': 'Ce quartier interdit les tours',
+  'Rubbish is piling up: a recycling centre sends trucks to collect it': 'Les déchets s’accumulent : construisez un centre de recyclage pour les collecter',
+  'Office towers need a City (1,800 residents) and a land value of 45': 'Les tours de bureaux exigent une Cité (1 800 habitants) et une valeur du sol de 45',
+  'High-rises unlock at Thriving town (900 residents)': 'Les tours se débloquent à Ville prospère (900 habitants)',
+  'Leisure & tourism opens at Small town (400 residents)': 'Loisirs & tourisme s’ouvrent à Petite ville (400 habitants)',
+  'Add a second operating stop or station; bus stops need a road route in both directions': 'Ajoutez un second arrêt ou une seconde gare en service ; les bus exigent une route dans les deux sens',
+  'Connect this building to the highway': 'Reliez ce bâtiment à l’autoroute',
+  'Restore electricity': 'Rétablissez l’électricité',
+  'Restore water supply': 'Rétablissez l’eau',
+  'Restore sewage capacity': 'Rétablissez l’évacuation des égouts',
+  'Connect this amenity to a road or park path': 'Reliez cet équipement à une route ou une allée',
+  'Accessible from a road or connected park path': 'Accessible depuis une route ou une allée connectée',
+  'Join paths, plazas or lawns to a connected road to activate recreation benefits': 'Reliez allées, esplanades ou pelouses à une route connectée pour activer les loisirs',
+  'Needs 3 power and 2 water; congestion can reduce capacity by up to 50%.': 'Exige 3 d’électricité et 2 d’eau ; la congestion peut réduire la capacité jusqu’à 50 %.',
+  'Regional flights replace some incoming road trips within 24 cells. Needs power, water and sewage.': 'Les vols régionaux remplacent certains trajets auto entrants dans un rayon de 24 cases. Électricité, eau et assainissement requis.',
+  'Works with a single stop. Passengers walk here and take a taxi directly to their destination; four cabs can operate at once. Traffic slows trips. Fares are earned on arrival. Needs power, water and sewage.': 'Fonctionne avec un seul arrêt. Les passagers s’y rendent à pied et prennent un taxi vers leur destination ; quatre taxis circulent en simultané. Recettes perçues à l’arrivée. Réseaux requis.',
+  '40 passenger capacity per connection; electric trolleybuses depart automatically on wired surface streets and avenues. Needs power, water and sewage.': 'Capacité de 40 passagers par liaison ; les trolleybus électriques partent automatiquement sur rues et avenues équipées. Réseaux requis.',
+  '30 passenger capacity per connection; traffic slows service. Buses depart automatically.': 'Capacité de 30 passagers par liaison ; le trafic ralentit le service. Les bus partent automatiquement.',
+  '100 passenger capacity per connection; underground tunnels link metro stations automatically, unaffected by traffic.': 'Capacité de 100 passagers par liaison ; des tunnels relient automatiquement les stations de métro, à l’abri du trafic.',
+  '120 passenger capacity per connection; elevated tracks connect stations automatically.': 'Capacité de 120 passagers par liaison ; les voies aériennes relient automatiquement les gares.',
+  'Runs two patrol cars at once across a wider district, and answers robberies first.': 'Fait tourner deux voitures de patrouille en même temps sur un large secteur, et répond aux braquages en priorité.',
+  'Dispatches patrol cars to nearby buildings. Completed visits deter crime for three minutes; cars also respond to collisions.': 'Envoie des patrouilles vers les bâtiments voisins. Les rondes dissuadent la délinquance pendant 3 minutes ; intervient aussi sur les accidents.',
+  'Dispatches one fire engine at a time to reachable fires. After arrival, firefighting takes eight seconds.': 'Envoie un fourgon vers les incendies accessibles. Sur place, l’extinction dure 8 secondes.',
+};
+
+export function translateInspectorText(text: string): string {
+  if (current !== 'fr') return text;
+  if (INSPECTOR_EXACT_FR[text]) return INSPECTOR_EXACT_FR[text];
+
+  let m: RegExpMatchArray | null;
+
+  if ((m = text.match(/^Level (\d+)\s+→\s+(\d+)$/))) {
+    return `Niveau ${m[1]} → ${m[2]}`;
+  }
+  if ((m = text.match(/^Service decline: (\d+)s to downgrade$/))) {
+    return `Baisse de services : déclassement dans ${m[1]} s`;
+  }
+  if ((m = text.match(/^Building on fire: (\d+)s before damage\. Needs a responding fire engine\.$/))) {
+    return `Bâtiment en feu : dégâts dans ${m[1]} s. Pompiers requis.`;
+  }
+  if ((m = text.match(/^Crime pressure: (\d+)%\s+·\s+patrol protection: (\d+)s$/))) {
+    return `Pression criminelle : ${m[1]} % · patrouille active : ${m[2]} s`;
+  }
+  if ((m = text.match(/^Ground pollution: (.+)$/))) {
+    return `Pollution du sol : ${m[1]}`;
+  }
+  if ((m = text.match(/^Land value: (\d+)\s+·\s+noise\s+(\d+)\s+·\s+rubbish\s+(\d+)%$/))) {
+    return `Valeur du sol : ${m[1]} · bruit ${m[2]} · déchets ${m[3]} %`;
+  }
+  if ((m = text.match(/^Tax rate here: (\d+)%$/))) {
+    return `Taux d’imposition local : ${m[1]} %`;
+  }
+  if ((m = text.match(/^District (\d+)$/))) {
+    return `Quartier ${m[1]}`;
+  }
+  if ((m = text.match(/^Offices need (\d+)% city education coverage to upgrade$/))) {
+    return `Les bureaux ont besoin de ${m[1]} % de couverture scolaire pour grandir`;
+  }
+  if ((m = text.match(/^Land value (\d+)\s+\/\s+30: parks, transit, a river view and quiet streets raise it$/))) {
+    return `Valeur du sol ${m[1]} / 30 : parcs, transports, vue sur l’eau et rues calmes l’augmentent`;
+  }
+  if ((m = text.match(/^Maturing: (\d+)s remaining$/))) {
+    return `Maturation : encore ${m[1]} s`;
+  }
+  if ((m = text.match(/^Zone demand: (-?\d+)%$/))) {
+    return `Demande de zone : ${m[1]} %`;
+  }
+  if ((m = text.match(/^Visitor appeal: \$([0-9.]+)\s+\(parks and waterfront raise it\)$/))) {
+    return `Attrait touristique : ${m[1]} $ (parcs et berges l’augmentent)`;
+  }
+  if ((m = text.match(/^Funding: (\d+)%\s+·\s+upkeep\s+\$([0-9.]+)\/s$/))) {
+    return `Financement : ${m[1]} % · entretien ${m[2]} $/s`;
+  }
+  if ((m = text.match(/^Effective capacity: (\d+)\s+residents\s+·\s+range\s+(\d+)\s+cells$/))) {
+    return `Capacité effective : ${m[1]} habitants · rayon ${m[2]} cases`;
+  }
+  if ((m = text.match(/^(\d+)\s+of 4 taxis carrying passengers\s+·\s+(\d+)-cell walking catchment$/))) {
+    return `${m[1]} sur 4 taxis en course · zone piétonne de ${m[2]} cases`;
+  }
+  if ((m = text.match(/^(\d+)\s+active automatic connections\s+·\s+(\d+)-cell walking catchment$/))) {
+    return `${m[1]} liaison(s) automatique(s) active(s) · zone piétonne de ${m[2]} cases`;
+  }
+  if ((m = text.match(/^Capacity: (\d+)\s+(power|water|sewage)$/))) {
+    const kind = m[2] === 'power' ? 'électricité' : m[2] === 'water' ? 'eau' : 'assainissement';
+    return `Capacité : ${m[1]} ${kind}`;
+  }
+  if ((m = text.match(/^(\w+)\s+coverage is under\s+(\d+)%\s+nearby$/))) {
+    const civicKey = m[1].toLowerCase();
+    const civicName = CIVIC_FR[civicKey] ?? m[1];
+    return `Couverture ${civicName.toLowerCase()} inférieure à ${m[2]} % à proximité`;
+  }
+  if ((m = text.match(/^(\w+)\s+needed for high-rises:\s+(\d+)%\s+\/\s+(\d+)%$/))) {
+    const civicKey = m[1].toLowerCase();
+    const civicName = CIVIC_FR[civicKey] ?? m[1];
+    return `${civicName} requis pour les tours : ${m[2]} % / ${m[3]} %`;
+  }
+
+  return text;
+}
+
+const UI_MESSAGES_FR: Record<string, string> = {
+  'Not enough money': 'Fonds insuffisants',
+  'The map’s own motorway cannot be reshaped': 'L’autoroute d’origine ne peut pas être modifiée',
+  "The map's own motorway cannot be reshaped": 'L’autoroute d’origine ne peut pas être modifiée',
+  "The map's own motorway cannot be changed": 'L’autoroute d’origine ne peut pas être modifiée',
+  'Roundabouts keep their shape': 'Les ronds-points gardent leur forme',
+  'Roundabouts are removed with the bulldozer': 'Les ronds-points se retirent avec le bulldozer',
+  'Offices unlock at Thriving town (900 residents)': 'Les bureaux se débloquent à Ville prospère (900 habitants)',
+  'Leisure & tourism unlocks at Small town (400 residents)': 'Les loisirs et le tourisme se débloquent à Petite ville (400 habitants)',
+  'City entrances unlock at Small town': 'Les entrées de ville se débloquent à Petite ville',
+  'New city entrance opened. Connect its avenue to your neighborhoods.': 'Nouvelle entrée de ville ouverte. Reliez son avenue à vos quartiers.',
+  'Traffic lights go on junctions of three or more roads': 'Les feux s’installent aux carrefours d’au moins trois routes',
+  'Roundabouts do not need lights': 'Les ronds-points n’ont pas besoin de feux',
+  'Stop signs go on junctions of three or more roads': 'Les stops s’installent aux carrefours d’au moins trois routes',
+  'Roundabouts already give way': 'Les ronds-points ont déjà la priorité',
+  'Bike lanes need a surface street or avenue away from roundabouts': 'Les pistes cyclables exigent une rue ou une avenue au sol, hors rond-point',
+  'Pick a street to calm': 'Choisissez une rue à apaiser',
+  'Expressways and ramps cannot be calmed': 'Les voies rapides et les bretelles ne peuvent pas être apaisées',
+  'Roundabout direction is fixed': 'Le sens du rond-point est fixe',
+  'No room for a roundabout here': 'Il n’y a pas assez de place pour un rond-point ici',
+  'New map. Build out from the end of the two-lane highway.': 'Nouvelle carte. Prolongez la route depuis l’extrémité de l’autoroute à deux voies.',
+  'Demo city loaded': 'Ville de démo chargée',
+  'Link copied to clipboard': 'Lien copié dans le presse-papiers',
+  'Infinite money on': 'Argent infini activé',
+  'Infinite money off': 'Argent infini désactivé',
+  'Undone: the last change was taken back and refunded': 'Action annulée : la dernière modification a été retirée et remboursée',
+  'Nothing to undo': 'Rien à annuler',
+  'Build a road first, then take a car out on it.': 'Construisez d’abord une route, puis sortez une voiture.',
+  'That save could not be read': 'Impossible de lire cette sauvegarde',
+  'That link is from an older version and cannot be loaded': 'Ce lien provient d’une ancienne version et ne peut pas être chargé',
+  'Signal removed': 'Feux supprimés',
+  'Every movement needs a green in some phase: give it one elsewhere first': 'Chaque mouvement doit avoir un feu vert dans une phase : ajoutez-le d’abord dans une autre phase',
+  'A robbery got away with $1,200. Police stations respond to alarms nearby.': 'Un braquage a rapporté 1 200 $ aux voleurs. Les commissariats proches répondent aux alarmes.',
+  'The river is over its banks: water is spreading over the land. Lower any dam, or raise the ground, to hold it back.': 'La rivière déborde et envahit les terres. Abaissez un barrage ou rehaussez le terrain pour contenir l’eau.',
+  '$6,000 received. Repayment: $6/s for 1,100 simulation seconds.': '6 000 $ reçus. Remboursement : 6 $/s pendant 1 100 secondes de simulation.',
+  'City loan repaid.': 'Prêt municipal remboursé.',
+  'No outstanding loan.': 'Aucun prêt en cours.',
+};
+
+/** Translate interface notices at their display boundary; unknown text remains readable in English. */
+export function translateUiMessage(text: string): string {
+  if (current !== 'fr') return text;
+  if (UI_MESSAGES_FR[text]) return UI_MESSAGES_FR[text];
+
+  let m: RegExpMatchArray | null;
+  if ((m = text.match(/^Grid snap (on|off): (.+)$/))) {
+    return m[1] === 'on' ? 'Magnétisme activé : les points de route suivent le centre des cases' : 'Magnétisme désactivé : routes libres, avec repères et angles de 15°';
+  }
+  if ((m = text.match(/^(.+) unlocks at city level (\d+)\.$/))) return `${m[1]} se débloque au niveau de ville ${m[2]}.`;
+  if ((m = text.match(/^Repay the existing loan before borrowing again\. Early repayment needs enough cash\.$/))) return 'Remboursez le prêt en cours avant d’en contracter un autre. Un remboursement anticipé exige assez de fonds.';
+  if ((m = text.match(/^Load “(.+)”$/))) return `Ville « ${m[1]} » chargée`;
+  if ((m = text.match(/^Loaded “(.+)”$/))) return `Ville « ${m[1]} » chargée`;
+  if ((m = text.match(/^Delete “(.+)”\?$/))) return `Supprimer « ${m[1]} » ?`;
+  if ((m = text.match(/^Achievement: (.+) — (.+)$/))) return `Succès : ${m[1]} — ${m[2]}`;
+  if ((m = text.match(/^(\d+) building fires: fire engines need working stations and clear road access$/))) return `${m[1]} incendie(s) : les pompiers ont besoin de casernes en service et d’un accès routier dégagé`;
+  if ((m = text.match(/^(\d+) robbery in progress: the nearest police station is on its way$/))) return `${m[1]} braquage(s) en cours : le commissariat le plus proche est en route`;
+  if ((m = text.match(/^(\d+) street racers are out: calmed streets and signals slow them down$/))) return `${m[1]} course(s) de rue : les rues apaisées et les feux les ralentissent`;
+  if ((m = text.match(/^(\d+) traffic collisions: blocked vehicles await police or recovery$/))) return `${m[1]} collision(s) : les véhicules bloqués attendent la police ou le dépannage`;
+  if ((m = text.match(/^(\d+) crime hotspots: police visits deter crime and restore tax revenue$/))) return `${m[1]} foyer(s) de délinquance : les patrouilles la freinent et rétablissent les recettes fiscales`;
+  if ((m = text.match(/^(\d+) homes losing services: inspect the amber markers before they downgrade$/))) return `${m[1]} logement(s) perdent leurs services : inspectez les marqueurs orange avant leur déclassement`;
+
+  const exact: Record<string, string> = {
+    'Flood! The river is swollen and climbing its banks. Flood barriers and raised ground keep the water off the streets': 'Inondation ! La rivière monte et déborde. Les digues et le terrain rehaussé empêchent l’eau d’envahir les rues.',
+    'Tornado crossing the valley: buildings in its path are being damaged': 'Une tornade traverse la vallée et endommage les bâtiments sur son passage.',
+    'Rubbish is piling up: build recycling centres so garbage trucks can collect it': 'Les déchets s’accumulent : construisez des centres de recyclage pour permettre leur collecte.',
+    'Shops are importing most of their stock: zone industry or farmland to supply them': 'Les commerces importent la plupart de leurs marchandises : zonez de l’industrie ou des fermes pour les approvisionner.',
+    'Draw a street from the end of the two-lane highway, then zone beside it': 'Tracez une rue depuis l’extrémité de l’autoroute à deux voies, puis zonez le long de celle-ci.',
+    'Treasury in debt: open Budget to reduce funding or take a recovery loan. Existing zones can still grow.': 'La ville est endettée : ouvrez le budget pour réduire les financements ou prendre un prêt de relance. Les zones existantes peuvent encore grandir.',
+    'No power: build a wind turbine or a coal plant next to a road': 'Pas d’électricité : construisez une éolienne ou une centrale à charbon près d’une route.',
+    'Power shortage': 'Pénurie d’électricité',
+    'No water: build a water tower, or a pump on the river': 'Pas d’eau : construisez un château d’eau ou une pompe sur la rivière.',
+    'Water shortage': 'Pénurie d’eau',
+    'No sewage: build an outlet on the river, downstream of any pump': 'Aucun assainissement : construisez un émissaire sur la rivière, en aval des pompes.',
+    'Sewage is backing up': 'Les eaux usées débordent',
+    'Dirty drinking water: move pumps upstream of outlets and towers off polluted ground': 'Eau potable polluée : placez les pompes en amont des émissaires et éloignez les châteaux d’eau des sols pollués.',
+    'Pollution is reaching homes': 'La pollution atteint les logements',
+    'Gridlock: try buses, rail, avenues or another city entrance': 'Embouteillages : essayez les bus, le train, les avenues ou une autre entrée de ville.',
+    'Homes need healthcare: place a clinic near residents': 'Les logements ont besoin de soins : placez un dispensaire près des habitants.',
+    'Education limits growth: place schools near homes': 'Le manque d’éducation freine la croissance : placez des écoles près des logements.',
+    'Waste coverage is low: build a recycling center': 'La collecte des déchets est insuffisante : construisez un centre de recyclage.',
+  };
+  return exact[text] ?? text;
+}

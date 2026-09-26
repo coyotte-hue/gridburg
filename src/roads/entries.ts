@@ -24,8 +24,10 @@ export const entryGate = (node: { x: number; z: number }): { x: number; z: numbe
  * entrance either reaches a node inside the map, and its gate is where that road meets the edge, or
  * it stays outside, like the motorway that passes the city by, and has no gate.
  */
-export function mapGates(net: Network): { x: number; z: number; dx: number; dz: number }[] {
-  const inside = (n: { x: number; z: number }): boolean => n.x >= 0 && n.z >= 0 && n.x <= GRID && n.z <= GRID;
+export function mapGates(net: Network, region?: { minX: number; minZ: number; maxX: number; maxZ: number }): { x: number; z: number; dx: number; dz: number }[] {
+  const inside = (n: { x: number; z: number }): boolean => region
+    ? n.x >= region.minX && n.z >= region.minZ && n.x <= region.maxX && n.z <= region.maxZ
+    : n.x >= 0 && n.z >= 0 && n.x <= GRID && n.z <= GRID;
   const gates: { x: number; z: number; dx: number; dz: number }[] = [];
   for (const entry of net.nodes.values()) {
     if (!entry.entry) continue;
@@ -33,7 +35,7 @@ export function mapGates(net: Network): { x: number; z: number; dx: number; dz: 
     const seen = new Set<number>([entry.id]);
     while (seg) {
       const next = net.nodes.get(seg.a === at.id ? seg.b : seg.a)!;
-      if (inside(next)) { gates.push(entrySite(next.x, next.z)); break; }
+      if (inside(next)) { gates.push(region ? { x: next.x, z: next.z, dx: 0, dz: 0 } : entrySite(next.x, next.z)); break; }
       if (seen.has(next.id)) break;
       seen.add(next.id);
       // Carry on along the same road: at an interchange the continuation is the arm of the same kind.

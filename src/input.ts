@@ -269,7 +269,7 @@ export class Input {
     const district = this.isDistrictTool();
     const tint = this.tool === 'district' ? DISTRICT_COLORS[this.districtBrush - 1] : 0xffffff;
     for (const t of this.brushTiles(centre)) {
-      const ok = district || (terraformAllowed(this.game.baseTerrain, this.game.extras.terraform, t, this.tool as TerraformAction) && !this.game.raster.cover[t] && this.game.owners[t] < 0);
+      const ok = this.game.isTileUnlocked(t) && (district || (terraformAllowed(this.game.baseTerrain, this.game.extras.terraform, t, this.tool as TerraformAction) && !this.game.raster.cover[t] && this.game.owners[t] < 0));
       m4.compose(new THREE.Vector3((t % GRID) - half + 0.5, 0, ((t / GRID) | 0) - half + 0.5), q, one);
       this.rect.setMatrixAt(n, m4);
       this.rect.setColorAt(n, tmpColor.setHex(ok ? tint : 0x555555));
@@ -663,6 +663,7 @@ export class Input {
   }
 
   private roadProblem(path: P[]): string | null {
+    if (!this.game.isWorldPathUnlocked(path)) return 'Roads must stay inside purchased parcels';
     if (this.tool === 'parkpath') return this.game.parkPathProblem(buildPieces(path));
     if (measurePath(path, this.game.hillMask).wet > 0) return 'Roads cannot climb raised ground: lower it first';
     if (this.legacySpan(path)) {
@@ -689,6 +690,7 @@ export class Input {
     const g = this.game;
     if (this.chain.length === 0) {
       const s = this.snap(p);
+      if (!g.isWorldPointUnlocked(s.x, s.z)) { this.onToast?.('Buy the neighboring parcel before building there'); return; }
       this.chain = [s];
       this.heading = this.tangentAt(s);
       this.tangent = this.mode === 'smooth' ? this.heading : null;
@@ -1062,6 +1064,7 @@ export class Input {
     const g = this.game;
     const net = g.net;
     if (this.tool === 'entry') {
+      if (!g.isWorldPointUnlocked(p.x, p.z)) { this.onToast?.('Buy the neighboring parcel before opening an entrance there'); return; }
       if (g.stats.cityLevel < ENTRY_UNLOCK) { this.onToast?.('City entrances unlock at Small town'); return; }
       if (!g.canAfford(COST_ENTRY)) { this.onToast?.('Not enough money'); return; }
       const plan = entrancePlan(net, g.terrain, g.kind, p.x, p.z);
@@ -1138,6 +1141,7 @@ export class Input {
       g.flush();
     } else if (this.tool === 'roundabout') {
       const c = this.roundaboutCenter(p), cost = this.roundaboutCost();
+      if (!g.isWorldAreaUnlocked(c.x, c.z, this.roundaboutRadius(c))) { this.onToast?.('A roundabout must fit inside purchased parcels'); return; }
       if (!g.canAfford(cost)) { this.onToast?.('Not enough money'); return; }
       const kind = this.roundaboutKind(c);
       if (!net.addRoundabout(c.x, c.z, this.roundaboutRadius(c), kind)) { this.onToast?.('No room for a roundabout here'); return; }

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GRID } from '../constants';
+import { GRID, N_TILES } from '../constants';
 import type { DisasterView } from '../sim/disasters';
 
 /** Floodwater over the low ground, and a tornado funnel with a ring of debris. */
@@ -13,7 +13,7 @@ export class DisasterLayer {
 
   constructor() {
     const plane = new THREE.PlaneGeometry(1.02, 1.02); plane.rotateX(-Math.PI / 2);
-    this.flood = new THREE.InstancedMesh(plane, new THREE.MeshStandardMaterial({ color: 0x5f7f86, roughness: 0.2, transparent: true, opacity: 0.8, depthWrite: false }), 6400);
+    this.flood = new THREE.InstancedMesh(plane, new THREE.MeshStandardMaterial({ color: 0x5f7f86, roughness: 0.2, transparent: true, opacity: 0.8, depthWrite: false }), N_TILES);
     this.flood.count = 0; this.flood.frustumCulled = false; this.flood.renderOrder = 2;
     this.funnel = new THREE.Group();
     const mat = new THREE.MeshStandardMaterial({ color: 0x7c7f84, transparent: true, opacity: 0.72, roughness: 1, side: THREE.DoubleSide, depthWrite: false });

@@ -5,6 +5,9 @@ import { RACE_KINDS } from '../racing/routes';
 import type { RaceRoute } from '../racing/routes';
 import { playerCarGeometry } from '../racing/carModels';
 import { icon } from './icons';
+import { getLang, carModelText, carPartText, raceKindText } from '../i18n';
+
+const L = (en: string, fr: string): string => getLang() === 'fr' ? fr : en;
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -12,7 +15,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   if (text !== undefined) e.textContent = text;
   return e;
 }
-const money = (n: number): string => `$${Math.round(n).toLocaleString('en-US')}`;
+const money = (n: number): string => `$${Math.round(n).toLocaleString(getLang() === 'fr' ? 'fr-FR' : 'en-US')}`;
 const hex = (c: number): string => `#${c.toString(16).padStart(6, '0')}`;
 
 export interface GarageActions {
@@ -50,10 +53,10 @@ export class GaragePanel {
     this.state = state;
     this.actions = actions;
     const head = el('div', 'garage-head');
-    const title = el('h2', undefined, 'Garage');
+    const title = el('h2', undefined, L('Garage', 'Garage'));
     const close = el('button', 'garage-close');
     close.append(icon('close', 18));
-    close.setAttribute('aria-label', 'Close the garage');
+    close.setAttribute('aria-label', L('Close the garage', 'Fermer le garage'));
     close.addEventListener('click', () => this.hide());
     head.append(title, this.cash, close);
     this.root.append(head, this.body);
@@ -121,27 +124,28 @@ export class GaragePanel {
 
   /** Build the panel afresh from the garage's state. */
   render(): void {
-    this.cash.textContent = `${money(this.state.cash)} winnings`;
+    this.cash.textContent = `${money(this.state.cash)} ${L('winnings', 'de gains')}`;
     this.body.textContent = '';
     const car = this.selected, model = MODELS[car.model];
 
     // Left: your cars, then the showroom.
     const list = el('div', 'garage-col garage-cars');
-    list.append(el('h3', undefined, 'Your cars'));
+    list.append(el('h3', undefined, L('Your cars', 'Vos voitures')));
     this.state.cars.forEach((c, i) => {
       const b = el('button', `garage-car${i === this.state.selected ? ' active' : ''}`);
       const swatch = el('span', 'swatch'); swatch.style.background = hex(c.color);
-      b.append(swatch, el('span', undefined, MODELS[c.model].name));
+      b.append(swatch, el('span', undefined, carModelText(c.model, MODELS[c.model]).name));
       b.addEventListener('click', () => { this.state.selected = i; this.save(); this.render(); });
       list.append(b);
     });
-    list.append(el('h3', undefined, 'Showroom'));
+    list.append(el('h3', undefined, L('Showroom', 'Véhicules disponibles')));
     for (const id of Object.keys(MODELS) as CarModel[]) {
       if (this.state.cars.some(c => c.model === id)) continue;
       const m = MODELS[id];
+      const modelText = carModelText(id, m);
       const row = el('div', 'garage-shop');
-      row.append(el('strong', undefined, m.name), el('span', 'pnote', m.blurb));
-      const buy = el('button', 'garage-buy', `Buy ${money(m.price)}`);
+      row.append(el('strong', undefined, modelText.name), el('span', 'pnote', modelText.blurb));
+      const buy = el('button', 'garage-buy', L(`Buy ${money(m.price)}`, `Acheter ${money(m.price)}`));
       buy.disabled = this.state.cash < m.price;
       buy.addEventListener('click', () => {
         if (this.state.cash < m.price) return;
@@ -157,10 +161,11 @@ export class GaragePanel {
     // Middle: the car itself.
     const mid = el('div', 'garage-col garage-mid');
     mid.append(this.canvas);
-    mid.append(el('h3', undefined, model.name), el('p', 'pnote', model.blurb));
+    const selectedModel = carModelText(car.model, model);
+    mid.append(el('h3', undefined, selectedModel.name), el('p', 'pnote', selectedModel.blurb));
     const r = ratings(car);
     const bars = el('div', 'garage-bars');
-    for (const [label, v] of [['Speed', r.speed], ['Acceleration', r.acceleration], ['Handling', r.handling], ['Braking', r.braking]] as [string, number][]) {
+    for (const [label, v] of [[L('Speed', 'Vitesse'), r.speed], [L('Acceleration', 'Accélération'), r.acceleration], [L('Handling', 'Tenue de route'), r.handling], [L('Braking', 'Freinage'), r.braking]] as [string, number][]) {
       const row = el('div', 'garage-bar');
       const fill = el('span', 'fill'); fill.style.width = `${v * 10}%`;
       const track = el('span', 'track'); track.append(fill);
@@ -172,7 +177,7 @@ export class GaragePanel {
     for (const p of PAINTS) {
       const b = el('button', `garage-paint${p === car.color ? ' active' : ''}`);
       b.style.background = hex(p);
-      b.setAttribute('aria-label', `Paint ${hex(p)}`);
+      b.setAttribute('aria-label', L(`Paint ${hex(p)}`, `Peinture ${hex(p)}`));
       b.addEventListener('click', () => { car.color = p; this.save(); this.render(); });
       paints.append(b);
     }
@@ -183,8 +188,9 @@ export class GaragePanel {
       const pips = el('span', 'pips');
       for (let k = 0; k < MAX_LEVEL; k++) pips.append(el('i', k < level ? 'on' : undefined));
       const info = el('span', 'part-info');
-      info.append(el('strong', undefined, PARTS[id].name), el('span', 'pnote', PARTS[id].effect));
-      const up = el('button', 'garage-buy', level >= MAX_LEVEL ? 'Maxed' : `Upgrade ${money(partCost(car.model, level))}`);
+      const partText = carPartText(id, PARTS[id]);
+      info.append(el('strong', undefined, partText.name), el('span', 'pnote', partText.effect));
+      const up = el('button', 'garage-buy', level >= MAX_LEVEL ? L('Maxed', 'Au maximum') : L(`Upgrade ${money(partCost(car.model, level))}`, `Améliorer ${money(partCost(car.model, level))}`));
       up.disabled = level >= MAX_LEVEL || this.state.cash < partCost(car.model, level);
       up.addEventListener('click', () => {
         const cost = partCost(car.model, car.parts[id]);
@@ -199,28 +205,29 @@ export class GaragePanel {
 
     // Right: the races.
     const races = el('div', 'garage-col garage-races');
-    races.append(el('h3', undefined, 'Races around town'));
+    races.append(el('h3', undefined, L('Races around town', 'Courses en ville')));
     const list2 = this.actions.races();
-    if (!list2.length) races.append(el('p', 'pnote', 'Build more streets: races need a few blocks of road to run on.'));
+    if (!list2.length) races.append(el('p', 'pnote', L('Build more streets: races need a few blocks of road to run on.', 'Construisez davantage de rues : les courses ont besoin de plusieurs pâtés de maisons.')));
     for (const race of list2) {
       const kind = RACE_KINDS[race.kind];
+      const kindText = raceKindText(race.kind, kind);
       const row = el('div', 'garage-race');
-      const badge = el('span', 'race-badge', kind.label); badge.style.background = hex(kind.color);
+      const badge = el('span', 'race-badge', kindText.label); badge.style.background = hex(kind.color);
       const best = this.state.best[race.id];
       const km = (race.length * race.laps * 0.015).toFixed(1);
-      const detail = `${km} km${race.loop ? ` · ${race.laps} laps` : ''} · ${race.kind === 'drift' ? `beat ${race.target.toLocaleString('en-US')} pts` : race.kind === 'police' ? 'escape the police' : race.kind === 'drag' ? '1 rival' : `${race.rivals} rivals`}`;
+      const detail = `${km} km${race.loop ? ` · ${race.laps} ${L('laps', 'tours')}` : ''} · ${race.kind === 'drift' ? L(`beat ${race.target.toLocaleString(getLang() === 'fr' ? 'fr-FR' : 'en-US')} pts`, `objectif : ${race.target.toLocaleString(getLang() === 'fr' ? 'fr-FR' : 'en-US')} pts`) : race.kind === 'police' ? L('escape the police', 'échapper à la police') : race.kind === 'drag' ? L('1 rival', '1 rival') : `${race.rivals} ${L('rivals', 'rivaux')}`}`;
       const info = el('span', 'part-info');
       info.append(el('strong', undefined, race.name), el('span', 'pnote', detail));
-      if (best !== undefined) info.append(el('span', 'pnote best', race.kind === 'drift' ? `Best ${best.toLocaleString('en-US')} pts` : best === 1 ? 'Won' : `Best: ${ordinal(best)}`));
-      const go = el('button', 'garage-go', `Race · ${money(race.reward)}`);
+      if (best !== undefined) info.append(el('span', 'pnote best', race.kind === 'drift' ? L(`Best ${best.toLocaleString('en-US')} pts`, `Record : ${best.toLocaleString('fr-FR')} pts`) : best === 1 ? L('Won', 'Victoire') : L(`Best: ${ordinal(best)}`, `Meilleure place : ${ordinal(best)}`)));
+      const go = el('button', 'garage-go', L(`Race · ${money(race.reward)}`, `Courir · ${money(race.reward)}`));
       go.addEventListener('click', () => { this.hide(); this.actions.race(race); });
       row.append(badge, info, go);
       races.append(row);
     }
     const drive = el('button', 'garage-drive');
-    drive.append(icon('drive', 18), el('span', undefined, 'Free drive'));
+    drive.append(icon('drive', 18), el('span', undefined, L('Free drive', 'Conduite libre')));
     drive.addEventListener('click', () => { this.hide(); this.actions.drive(); });
-    races.append(el('p', 'pnote', 'In a free drive, glowing rings on the road mark the races: drive into one and press Enter.'), drive);
+    races.append(el('p', 'pnote', L('In a free drive, glowing rings on the road mark the races: drive into one and press Enter.', 'En conduite libre, les anneaux lumineux indiquent les courses : traversez-en un et appuyez sur Entrée.')), drive);
 
     this.body.append(list, mid, races);
     requestAnimationFrame(() => this.preview());

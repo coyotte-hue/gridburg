@@ -32,17 +32,17 @@ export function riverSamples(t: Terrain): RiverSample[] {
   // A river that rises on the map has no upstream to draw; one that comes in from outside climbs into the hills.
   if (a.x < 0 || a.z < 0 || a.x > GRID || a.z > GRID) for (let n = 110; n >= 1; n--) {
     const u = Math.max(0, Math.min(1, (n - 7) / 26)), w = wander(n, phase);
-    points.push({ x: a.x + ux * n - uz * w - 40, z: a.z + uz * n + ux * w - 40, w: a.w, y: 4 * u * u * (3 - 2 * u) });
+    points.push({ x: a.x + ux * n - uz * w - GRID / 2, z: a.z + uz * n + ux * w - GRID / 2, w: a.w, y: 4 * u * u * (3 - 2 * u) });
   }
   // Where the river leaves the map it tips over a lip and falls into a gorge, a cell or two out.
   const fall = (x: number, z: number): number => {
     const u = Math.max(0, Math.min(1, (Math.max(Math.abs(x), Math.abs(z)) - GRID / 2 - 0.4) / 1.6));
     return -WATERFALL * u * u * (3 - 2 * u);
   };
-  for (const p of r) points.push({ ...p, x: p.x - 40, z: p.z - 40, y: fall(p.x - 40, p.z - 40) });
+  for (const p of r) points.push({ ...p, x: p.x - GRID / 2, z: p.z - GRID / 2, y: fall(p.x - GRID / 2, p.z - GRID / 2) });
   const vx = (c.x - d.x) / cl, vz = (c.z - d.z) / cl;
   for (let n = 1; n <= 110; n++) {
-    const w = wander(n, phase + 2.1), x = c.x + vx * n - vz * w - 40, z = c.z + vz * n + vx * w - 40;
+    const w = wander(n, phase + 2.1), x = c.x + vx * n - vz * w - GRID / 2, z = c.z + vz * n + vx * w - GRID / 2;
     points.push({ x, z, w: c.w, y: fall(x, z) });
   }
   return points;
@@ -323,7 +323,7 @@ export class LandscapeLayer {
     if (!t) return;
     // Measured from the gate on the map edge, so the cleared corridor covers the whole off-map approach,
     // and along every road the map came with that runs outside it: the motorway and its interchange.
-    const entries = [...net.nodes.values()].filter(n => n.entry).map(n => { const e = entrySite(n.x, n.z); return { ...e, x: e.x - 40, z: e.z - 40 }; });
+    const entries = [...net.nodes.values()].filter(n => n.entry).map(n => { const e = entrySite(n.x, n.z); return { ...e, x: e.x - GRID / 2, z: e.z - GRID / 2 }; });
     const fixed = [...net.segs.values()].filter(s => s.fixed).map(s => {
       let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
       for (let k = 0; k <= s.n; k++) { x0 = Math.min(x0, s.pts[k * 2]); x1 = Math.max(x1, s.pts[k * 2]); z0 = Math.min(z0, s.pts[k * 2 + 1]); z1 = Math.max(z1, s.pts[k * 2 + 1]); }

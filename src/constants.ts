@@ -1,4 +1,8 @@
-export const GRID = 80;
+export const GRID = 160;
+export const LEGACY_GRID = 80;
+export const EXPANSION_SIZE = 20;
+export const START_AREA_SIZE = 80;
+export const EXPANSION_SIDE = GRID / EXPANSION_SIZE;
 export const N_TILES = GRID * GRID;
 export const MAX_CARS = 600;
 export const SIM_HZ = 30;

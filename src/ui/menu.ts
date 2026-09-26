@@ -1,7 +1,7 @@
 import { visualDetail, type VisualDetail } from '../render/detail';
 import { icon } from './icons';
 import { deleteSlot, listSlots } from '../slots';
-import { applyLang, detectLang, getLang, setLang, t, type Lang } from '../i18n';
+import { applyLang, detectLang, getLang, setLang, t, translateUiMessage, type Lang } from '../i18n';
 
 export interface Settings {
   shadows: boolean;
@@ -73,7 +73,7 @@ export class MainMenu {
     this.settings = settings;
     this.root.setAttribute('role', 'dialog');
     this.root.setAttribute('aria-modal', 'true');
-    this.root.setAttribute('aria-label', 'Main menu');
+    this.root.setAttribute('aria-label', t('hud.mainMenu'));
     const card = el('div', 'menu-card');
     const title = el('div', 'menu-title');
     title.append(el('h1', undefined, 'Gridburg'), el('p', 'menu-sub', t('menu.subtitle')));
@@ -177,7 +177,7 @@ export class MainMenu {
       const row = el('div', 'menu-row');
       const load = this.button(slot.name, `${slot.population.toLocaleString(getLang() === 'fr' ? 'fr-FR' : 'en-US')} ${t('hud.residents')} · ${t('menu.dayWord')} ${slot.day} · ${new Date(slot.savedAt).toLocaleDateString(getLang() === 'fr' ? 'fr-FR' : 'en-US')}`, () => this.actions.loadSlot(slot.name), 'city');
       const del = el('button', 'menu-mini', t('menu.delete'));
-      del.addEventListener('click', () => { if (confirm(`Delete “${slot.name}”?`)) { deleteSlot(slot.name); this.buildSlots(); } });
+      del.addEventListener('click', () => { if (confirm(translateUiMessage(`Delete “${slot.name}”?`))) { deleteSlot(slot.name); this.buildSlots(); } });
       row.append(load, del);
       page.append(row);
     }

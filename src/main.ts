@@ -50,9 +50,9 @@ import { demoCity } from './demo';
 import { clearLocal, loadFromHash, loadLocal, saveLocal, shareUrl } from './save';
 import { MainMenu, loadSettings, saveSettings } from './ui/menu';
 import type { Settings } from './ui/menu';
-import { setLang } from './i18n';
+import { setLang, achievementTitle, achievementText } from './i18n';
 import { setDayLength } from './render/daylight';
-import { GRID, MAX_CARS, N_TILES, RES_POP, SERVICES, isZone } from './constants';
+import { EXPANSION_SIZE, GRID, MAX_CARS, N_TILES, RES_POP, SERVICES, isZone } from './constants';
 import { HALF_WIDTH, Network } from './roads/network';
 import { roadHeight } from './roads/structures';
 import { serviceCoverage } from './coverage';
@@ -227,27 +227,40 @@ const ramp = (v: number, good: boolean, alpha = 150): [number, number, number, n
   return [Math.round(230 - 170 * Math.max(0, u - 0.5) * 2), Math.round(70 + 170 * Math.min(1, u * 2)), 70, alpha];
 };
 let panelsReady = false;
+const emptyMapView = new Uint8Array(N_TILES);
+const lockedMapColor = (i: number): [number, number, number, number] => {
+  const x = i % GRID, z = Math.floor(i / GRID), px = Math.floor(x / EXPANSION_SIZE), pz = Math.floor(z / EXPANSION_SIZE);
+  const expansions = game.extras.expansions, side = GRID / EXPANSION_SIZE;
+  const edge = (x % EXPANSION_SIZE === 0 && px > 0 && expansions[pz * side + px - 1])
+    || (x % EXPANSION_SIZE === EXPANSION_SIZE - 1 && px + 1 < side && expansions[pz * side + px + 1])
+    || (z % EXPANSION_SIZE === 0 && pz > 0 && expansions[(pz - 1) * side + px])
+    || (z % EXPANSION_SIZE === EXPANSION_SIZE - 1 && pz + 1 < side && expansions[(pz + 1) * side + px]);
+  return edge ? [220, 165, 55, 210] : [34, 40, 46, 160];
+};
+const setExpansionView = (values: ArrayLike<number> | null, color?: (value: number, i: number) => [number, number, number, number] | null): void => {
+  overlay.setView(values ?? emptyMapView, (value, i) => game.isTileUnlocked(i) ? color?.(value, i) ?? null : lockedMapColor(i));
+};
 function renderView(): void {
   if (!panelsReady) return;
   const view = panels.view, maps = game.maps;
   districtLabels.setVisible(view === 'districts' || input.tool === 'district' || input.tool === 'undistrict');
-  if (view === 'none') { overlay.setView(null); return; }
+  if (view === 'none') { setExpansionView(null); return; }
   if (view === 'districts' || input.tool === 'district' || input.tool === 'undistrict') {
-    overlay.setView(game.extras.district, v => v ? [...hex(DISTRICT_COLORS[v - 1]), 120] : null);
+    setExpansionView(game.extras.district, v => v ? [...hex(DISTRICT_COLORS[v - 1]), 120] : null);
     return;
   }
   if (view === 'flood') {
     const zone = new Set(Disasters.floodZone(game.terrain.water, waterDistance(game.terrain.water), game.kind));
-    overlay.setView(game.extras.district, (_, i) => zone.has(i) ? [60, 130, 230, 140] : null);
+    setExpansionView(game.extras.district, (_, i) => zone.has(i) ? [60, 130, 230, 140] : null);
     return;
   }
-  if (!maps) { overlay.setView(null); return; }
+  if (!maps) { setExpansionView(null); return; }
   const isBuilt = (i: number): boolean => isZone(game.kind[i]) && game.level[i] > 0;
-  if (view === 'land') overlay.setView(maps.land, (v, i) => isBuilt(i) || game.kind[i] ? ramp(v, true) : ramp(v, true, 70));
-  else if (view === 'wellbeing') overlay.setView(maps.wellbeing, (v, i) => game.kind[i] === 2 && game.level[i] ? ramp(v, true) : null);
-  else if (view === 'noise') overlay.setView(maps.noise, v => v < 20 ? null : [150, 80, 220, Math.min(190, v)]);
-  else if (view === 'crime') overlay.setView(maps.crime, v => v < 10 ? null : [220, 50, 50, Math.min(200, 40 + v)]);
-  else if (view === 'garbage') overlay.setView(maps.garbage, v => v < 25 ? null : [140, 95, 40, Math.min(210, 30 + v)]);
+  if (view === 'land') setExpansionView(maps.land, (v, i) => isBuilt(i) || game.kind[i] ? ramp(v, true) : ramp(v, true, 70));
+  else if (view === 'wellbeing') setExpansionView(maps.wellbeing, (v, i) => game.kind[i] === 2 && game.level[i] ? ramp(v, true) : null);
+  else if (view === 'noise') setExpansionView(maps.noise, v => v < 20 ? null : [150, 80, 220, Math.min(190, v)]);
+  else if (view === 'crime') setExpansionView(maps.crime, v => v < 10 ? null : [220, 50, 50, Math.min(200, 40 + v)]);
+  else if (view === 'garbage') setExpansionView(maps.garbage, v => v < 25 ? null : [140, 95, 40, Math.min(210, 30 + v)]);
 }
 const panels = new CityPanels(uiRoot, hud.rightBar, hud.menuPopover, game, achievements, {
   setView: (view: MapView) => { renderView(); void view; },
@@ -282,7 +295,7 @@ function afterState(): void {
   const counts = new Map<number, number>();
   for (const k of game.kind) counts.set(k, (counts.get(k) ?? 0) + 1);
   const fresh = achievements.check({ stats: s, count: k => counts.get(k) ?? 0, districts, shaped });
-  for (const a of fresh) { hud.toast(`Achievement: ${a.title} — ${a.text}`); audio.play('achievement'); }
+  for (const a of fresh) { hud.toast(`Achievement: ${achievementTitle(a.id, a.title)} — ${achievementText(a.id, a.text)}`); audio.play('achievement'); }
   if (s.cityLevel > lastLevel && lastLevel >= 0) audio.play('chime');
   lastLevel = s.cityLevel;
 }
@@ -501,11 +514,11 @@ window.addEventListener('keydown', (e) => {
   if (driver.active && (e.code === 'KeyR' || e.key === 'r') && raceWorld.racing) raceWorld.reset(driver);
 });
 
-const tileCentre = (tile: number): { x: number; z: number } => ({ x: tile % 80 + 0.5, z: Math.floor(tile / 80) + 0.5 });
+const tileCentre = (tile: number): { x: number; z: number } => ({ x: tile % GRID + 0.5, z: Math.floor(tile / GRID) + 0.5 });
 /** Glide the camera to a place on the map, keeping its current height and angle. */
 let flight: { x: number; z: number; time: number } | null = null;
 function flyTo(x: number, z: number): void {
-  flight = { x: x - 40, z: z - 40, time: 0 };
+  flight = { x: x - GRID / 2, z: z - GRID / 2, time: 0 };
 }
 
 const showGrid = (t: string): void => { grid.visible = !['none', 'inspect'].includes(t); };
@@ -719,8 +732,8 @@ if (fromHash) {
 function focusCity(center: boolean): void {
   const e = game.terrain.entry;
   const along = center ? 27 : 12;
-  const tx = e.x + e.dx * along - 40 + (center ? 0 : 4);
-  const tz = e.z + e.dz * along - 40 + (center ? 0 : 9);
+  const tx = e.x + e.dx * along - GRID / 2 + (center ? 0 : 4);
+  const tz = e.z + e.dz * along - GRID / 2 + (center ? 0 : 9);
   controls.target.set(tx, 0, tz);
   camera.position.set(tx + 14, center ? 42 : 30, tz + (center ? 38 : 30));
 }

@@ -9,7 +9,7 @@ import { T_OFFICE, OFFICE_JOBS, OFFICE_UNLOCK, T_STATION, T_TROLLEY, T_TAXI, T_T
 import { transitNetwork, transitLineForTrip, taxiStopForTrip, distance, trolleyRoute } from './transit';
 import type { TransitNetwork } from './transit';
 import {
-  GRID, N_TILES, MAX_CARS, SIM_HZ, T_RES, T_COM, T_IND, T_PUMP, T_TOWER, T_OUTLET,
+  GRID, START_AREA_SIZE, N_TILES, MAX_CARS, SIM_HZ, T_RES, T_COM, T_IND, T_PUMP, T_TOWER, T_OUTLET,
   RES_POP, COM_JOBS, IND_JOBS, POWER_DEMAND, WATER_DEMAND, IND_POLLUTION, SERVICES, START_MONEY, ROAD_UPKEEP, ROAD_UPKEEP_FACTOR,
   F_NO_POWER, F_NO_WATER, F_NO_SEWAGE, F_NO_ROAD, isZone, isService, neighbor, tileHash,
   T_FARM, T_LEISURE, FARM_JOBS, LEISURE_JOBS, LEISURE_UNLOCK, zoneBase, zoneOccupants, ZONE_NAMES,
@@ -225,6 +225,7 @@ let component = new Int32Array(0);
 let entryNodes: number[] = [];
 /** Where roads from outside come onto the map, for the transit and trade that use them. */
 let gates: { x: number; z: number; dx: number; dz: number }[] = [];
+let transitGates: { x: number; z: number; dx: number; dz: number }[] = [];
 let entries: { seg: number; s: number }[] = [];
 let segCong = new Float32Array(0);
 /** The network itself, for lane layouts and turn tables. */
@@ -332,6 +333,8 @@ function applyNetwork(p: EditPayload): void {
     if (n.entry) entryNodes.push(nodeIds.length - 1);
   }
   gates = mapGates(net);
+  const startMin = (GRID - START_AREA_SIZE) / 2;
+  transitGates = mapGates(net, { minX: startMin, minZ: startMin, maxX: startMin + START_AREA_SIZE, maxZ: startMin + START_AREA_SIZE });
   // Keep surviving segments at stable indices where possible is not needed: cars are remapped by id below.
   const newSegs: RSeg[] = [];
   const segIndex = new Map<number, number>();
@@ -1791,7 +1794,7 @@ function census(): void {
   demand[3] = cityLevel >= OFFICE_UNLOCK ? clamp(0.2 + (pop * 0.35 - officeJobs) / Math.max(60, pop * 0.35 + officeJobs) * 0.6 + civic.education / 250 - zoneTax(3), -1, 1) : -1;
   const signature = `${serial}:` + Array.from(kind, (k, i) => SERVICES[k]?.transport && !flags[i] ? i : '').filter(String).join(',');
   if (signature !== transitSignature) {
-    transit = transitNetwork(kind, i => tileConnected(i) && flags[i] === 0, (a, b) => kind[a] === T_TROLLEY ? !!wiredRoute(accSeg[a], accS[a], accSeg[b], accS[b]) : kind[a] === T_STATION ? component[segA[accSeg[a]]] === component[segA[accSeg[b]]] : !!route(accSeg[a], accS[a], accSeg[b], accS[b]), gates);
+    transit = transitNetwork(kind, i => tileConnected(i) && flags[i] === 0, (a, b) => kind[a] === T_TROLLEY ? !!wiredRoute(accSeg[a], accS[a], accSeg[b], accS[b]) : kind[a] === T_STATION ? component[segA[accSeg[a]]] === component[segA[accSeg[b]]] : !!route(accSeg[a], accS[a], accSeg[b], accS[b]), transitGates);
     taxiStops = Array.from(kind.keys()).filter(i => kind[i] === T_TAXI && tileConnected(i) && flags[i] === 0);
     for (let i = 0; i < slots.length; i++) if (slots[i]?.taxiStop !== undefined && !taxiStops.includes(slots[i]!.taxiStop!)) freeCar(i);
     transitSignature = signature; transitTokens = transit.lines.map(() => 0); transitDepartures = transit.lines.map(() => 12);

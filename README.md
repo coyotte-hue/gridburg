@@ -202,13 +202,6 @@ npm run dev
 
 `npm run build` écrit un site statique dans `dist/`. Pousser sur `main` le déploie sur GitHub Pages via le workflow `.github/workflows/deploy.yml`.
 
-## Déployer (GitHub Pages)
-
-1. Poussez ce code sur `main` de votre fork.
-2. Sur GitHub : **Settings → Pages → Source → GitHub Actions**.
-3. Si aucun run ne démarre : **Settings → Actions → General → Allow all actions**, puis **Actions → Deploy to GitHub Pages → Run workflow**.
-4. Le jeu est en ligne à `https://<votre-pseudo>.github.io/gridburg/`.
-
 ## Absent du jeu
 
 Pas d'habitants individuels (gens et trajets comptés, pas simulés un par un), pas de carte au-delà de 80 × 80 cases, et pas de terrassement des collines : elles restent décoratives, et la grille reste à niveau.

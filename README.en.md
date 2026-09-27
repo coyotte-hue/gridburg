@@ -389,6 +389,15 @@ it takes. Larger sites keep to the grid, and back lanes only run behind rows squ
 
 The city autosaves in your browser, and **Share** copies a link that contains the whole city.
 
+## Multiplayer co-op
+
+Build the same city together, live: the **Multiplayer** button (group icon, top right) opens the co-op panel.
+
+- **Host**: click it, copy the invite code and send it to your friends (one code per guest). Then paste their answer to let them in.
+- **Join**: paste the host's code, then send your answer back.
+- The host runs the simulation and shares money and growth; everyone builds with their own tools, sees the other mayors' coloured rings, and coordinates over chat. Only the host can undo (Ctrl+Z).
+- A direct browser-to-browser link (WebRTC, no server or account): if connecting fails, reload on both sides; strict networks may block it. If the host leaves, everyone keeps a copy of the city.
+
 ## How it works
 
 - Vite + TypeScript + [three.js](https://threejs.org/), no UI framework.
@@ -425,6 +434,7 @@ The city autosaves in your browser, and **Share** copies a link that contains th
 - **Landscape:** seeded hills surround a flat, buildable valley; mixed forests clear around roads and occupied lots. Rivers have irregular banks, moving ripples, rocks and an upstream waterfall with spray. Highway entrances cut clear corridors through the hills. Existing saves retain their river and buildable grid.
 - **Save format:** v7 header with the seed and earned city level, RLE tiles, then the road network at 5 bytes per node and 9 per
   segment (including bridge/tunnel flags), followed by a length-prefixed incident snapshot; base64url-encoded into `#c=...`.
+- **Multiplayer** (`src/multiplayer/`): WebRTC star around the host, manual signalling with copy-paste codes (no server). The host applies guests' maps (`Game.exportAuthority` / `applyAuthority`) and rebroadcasts the encoded full city; cursors and chat ride the same channel.
 
 ## Develop
 

@@ -175,6 +175,15 @@ Les routes se posent librement, et le zonage les suit. Avec un outil zone en mai
 
 La ville se sauvegarde dans votre navigateur, et **Partager** copie un lien qui contient toute la ville.
 
+## Multijoueur coop
+
+Construisez la même ville à plusieurs, en direct : le bouton **Multijoueur** (icône groupe, en haut à droite) ouvre le panneau coop.
+
+- **Héberger** : cliquez, copiez le code d'invitation et envoyez-le à vos ami·es (un code par invité·e). Collez ensuite leur réponse pour les faire entrer.
+- **Rejoindre** : collez le code de l'hôte, puis renvoyez-lui votre réponse.
+- L'hôte fait tourner la simulation et partage caisse et croissance ; chacun construit avec ses outils, voit les anneaux de couleur des autres maires, et se coordonne par discussion. Seul l'hôte peut annuler (Ctrl+Z).
+- Lien direct de navigateur à navigateur (WebRTC, sans serveur ni compte) : si la connexion échoue, rechargez des deux côtés ; les réseaux stricts peuvent la bloquer. Si l'hôte part, chacun garde une copie de la ville.
+
 ## Fonctionnement
 
 - Vite + TypeScript + [three.js](https://threejs.org/), sans framework UI.
@@ -188,6 +197,7 @@ La ville se sauvegarde dans votre navigateur, et **Partager** copie un lien qui 
 - **Jour et nuit :** un jour simulé de huit minutes commence à 09:00. Horloge, soleil, crépuscule, lune, fenêtres allumées et réverbères suivent pause, vitesses et heure sauvegardée.
 - **Paysage :** des collines par graine entourent une vallée plate constructible ; les forêts mixtes s'effacent autour des routes et des lots occupés. Rivières aux berges irrégulières, vaguelettes animées, rochers et cascade d'amont avec embruns. Les entrées d'autoroute taillent des corridors dans les collines. Les sauvegardes gardent leur rivière et leur grille.
 - **Format de sauvegarde :** en-tête v7 avec graine et niveau acquis, tuiles en RLE, puis réseau à 5 octets par nœud et 9 par segment (dont ponts/tunnels), suivi d'un instantané d'incidents à longueur préfixée ; le tout en base64url dans `#c=...`.
+- **Multijoueur** (`src/multiplayer/`) : WebRTC en étoile autour de l'hôte, signalisation manuelle par codes à copier (aucun serveur). L'hôte applique les cartes des invités (`Game.exportAuthority` / `applyAuthority`) et rediffuse la ville complète encodée ; curseurs et discussion suivent le même canal.
 
 ## Développer
 

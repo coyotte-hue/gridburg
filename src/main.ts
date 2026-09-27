@@ -75,6 +75,9 @@ import { AchievementLog } from './achievements';
 import { TouchControls } from './ui/touch';
 import { loadSlot } from './slots';
 import { DISTRICT_COLORS } from './extras';
+import { RemoteCursors } from './multiplayer/cursors';
+import { MpCoop } from './multiplayer/sync';
+import { icon } from './ui/icons';
 import { Disasters } from './sim/disasters';
 import { waterDistance } from './sim/economy';
 
@@ -794,6 +797,31 @@ input.onSignalClick = (p) => {
 
 const dbg = { game, camera, controls, input, renderer, scene, walker, driver, raceWorld, garageState, frames: 0, layers: { balloons, streetDetail, verges, hills, flood, terraformLayer, disasterLayer, cyclists, parked, pedestrians, furniture, landscape, streetlights, river, structures, roads, buildings, overlay, cars, transport, subway, incidents } };
 (window as unknown as { __gridburg: unknown }).__gridburg = dbg;
+
+// ---- multiplayer co-op: same city, browser to browser, no server -------------------------------
+// The host owns the simulation; guests send their edits to the host and the host
+// broadcasts the shared city back. Invite codes are exchanged by hand (or chat)
+// so the game stays a static site.
+const remoteCursors = new RemoteCursors();
+scene.add(remoteCursors.group);
+const coop = new MpCoop({
+  game,
+  uiRoot,
+  cursors: remoteCursors,
+  toast: (m) => hud.toast(m),
+  getFocus: () => ({ x: controls.target.x + GRID / 2, z: controls.target.z + GRID / 2 }),
+});
+coop.attach();
+{
+  const mpBtn = document.createElement('button');
+  mpBtn.className = 'iconbtn';
+  mpBtn.title = 'Multiplayer co-op';
+  mpBtn.setAttribute('aria-label', 'Multiplayer co-op');
+  mpBtn.append(icon('people', 19));
+  mpBtn.addEventListener('click', () => coop.togglePanel());
+  hud.rightBar.prepend(mpBtn);
+  (dbg as unknown as { coop: MpCoop }).coop = coop;
+}
 
 /** How far the nearest fire engine or police car is from the camera: what the siren fades with. */
 function nearestSiren(): number {

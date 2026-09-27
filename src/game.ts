@@ -14,6 +14,7 @@ import type { FundingKey } from './management';
 import { levelForPopulation } from './progression';
 import { EXPANSION_SIDE, EXPANSION_SIZE, RES_POP, START_AREA_SIZE, T_RES, GRID, MAX_CARS, N_TILES, START_MONEY, isService, isZone } from './constants';
 import { Network, KIND_MOTORWAY, KIND_RAMP, KIND_HIGHWAY2 } from './roads/network';
+import type { PlainNet } from './roads/network';
 import { ensureApproaches } from './roads/entries';
 import { rasterize } from './roads/raster';
 import type { Raster } from './roads/raster';
@@ -32,6 +33,15 @@ import type { DisasterKind, DisasterView } from './sim/disasters';
 /** One step of undo: the city as it was before an edit, and what that edit cost. */
 interface UndoStep { before: SaveData; spent: number }
 const UNDO_LIMIT = 30;
+
+/** Co-op multiplayer map: everything a player draws, without simulation output. */
+export interface AuthorityMap {
+  kind: Uint8Array;
+  rot: Uint8Array;
+  net: PlainNet;
+  extras: CityExtras;
+  parkPaths: ParkPath[];
+}
 
 const CHEAT_FLOOR = 1_000_000;
 
@@ -408,6 +418,58 @@ export class Game {
   private snapshotCopy(): SaveData {
     const s = this.snapshot();
     return { ...s, kind: s.kind.slice(), level: s.level.slice(), rot: s.rot?.slice(), neglect: s.neglect?.slice() };
+  }
+
+  /**
+   * Co-op multiplayer: the map as one player drew it (tiles, roads, ground and
+   * districts), without simulation output (levels, money, tick) which stays
+   * with the host. A guest sends this to the host; the host applies it.
+   */
+  exportAuthority(): AuthorityMap {
+    return {
+      kind: this.kind.slice(),
+      rot: this.rot.slice(),
+      net: this.net.toPlain(),
+      extras: cloneExtras(this.extras),
+      parkPaths: this.parkPaths.map((p) => ({ ...p })),
+    };
+  }
+
+  /**
+   * Co-op multiplayer: take a guest's map as the city's, charging the shared
+   * treasury. Returns false when the treasury cannot cover it or the data is
+   * not a city map at all; the city is untouched then.
+   */
+  applyAuthority(data: AuthorityMap, spent: number): boolean {
+    if (!(data.kind instanceof Uint8Array) || !(data.rot instanceof Uint8Array)) return false;
+    if (data.kind.length !== N_TILES || data.rot.length !== N_TILES) return false;
+    if (!data.net || !Array.isArray(data.net.nodes) || !Array.isArray(data.net.segs)) return false;
+    if (data.net.nodes.length > 20000 || data.net.segs.length > 20000) return false;
+    if (!Array.isArray(data.parkPaths) || data.parkPaths.length > 2000) return false;
+    if (!data.parkPaths.every((p) => p && ['ax', 'az', 'cx', 'cz', 'bx', 'bz'].every((k) => Number.isFinite((p as unknown as Record<string, unknown>)[k])))) return false;
+    if (!Number.isFinite(spent) || spent < 0 || spent > 10_000_000) return false;
+    if (spent > 0 && !this.canAfford(spent)) return false;
+    const districts = data.extras?.district, ground = data.extras?.terraform;
+    if (!(districts instanceof Uint8Array) || !(ground instanceof Uint8Array)) return false;
+    if (districts.length !== N_TILES || ground.length !== N_TILES) return false;
+    let net: Network;
+    try {
+      net = Network.fromPlain(data.net);
+    } catch {
+      return false;
+    }
+    this.kind.set(data.kind);
+    this.rot.set(data.rot);
+    this.net = net;
+    this.extras = cloneExtras(data.extras);
+    this.parkPaths = data.parkPaths.map((p) => ({ ...p }));
+    this.tax = this.extras.taxes[0];
+    if (spent) this.pendingSpent += spent;
+    this.dirty = true;
+    this.flush();
+    // The edit payload carries no taxes, so the worker would keep the old rates.
+    this.send({ type: 'taxes', taxes: [...this.extras.taxes] as Taxes });
+    return true;
   }
 
   load(d: SaveData, keepHistory = false): void {

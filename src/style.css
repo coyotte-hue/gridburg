@@ -560,3 +560,45 @@ body.touch canvas { touch-action: none; }
 .signal-buttons .mitem { flex: 1; justify-content: center; }
 .signal-remove { color: var(--neg); }
 .mode-level { font-size: 11px; font-weight: 700; margin-left: -3px; }
+
+/* ---- multiplayer co-op ----------------------------------------------------------------- */
+.mp-panel {
+  position: absolute; top: 62px; right: 12px; width: 330px; max-height: calc(100vh - 80px); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 12px; z-index: 9;
+  background: var(--bg-solid); box-shadow: 0 12px 34px rgba(0,0,0,0.4); border: 1px solid var(--line); font-size: 13px;
+}
+.mp-panel[hidden] { display: none; }
+.mp-head { display: flex; align-items: center; justify-content: space-between; }
+.mp-head strong { font-size: 14px; }
+.mp-x { background: transparent; border: none; color: var(--dim); font-size: 18px; cursor: pointer; padding: 0 4px; }
+.mp-x:hover { color: var(--fg); }
+.mp-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }
+.mp-status { font-size: 12px; color: var(--dim); line-height: 1.4; }
+.mp-box { display: flex; flex-direction: column; gap: 8px; }
+.mp-box[hidden] { display: none; }
+.mp-row { display: flex; gap: 8px; align-items: center; }
+.mp-row .mp-name, .mp-row .mp-chatinput { flex: 1; min-width: 0; }
+.mp-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dim); }
+.mp-note { font-size: 11px; color: var(--dim); line-height: 1.45; margin: 0; }
+.mp-name, .mp-chatinput {
+  background: rgba(255,255,255,0.07); border: 1px solid var(--line); border-radius: 7px;
+  color: var(--fg); font: inherit; font-size: 13px; padding: 7px 9px;
+}
+.mp-code {
+  width: 100%; resize: vertical; font-family: ui-monospace, monospace; font-size: 10.5px; word-break: break-all;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--line); border-radius: 7px; color: var(--fg); padding: 7px 9px;
+}
+.mp-btn {
+  font: inherit; font-size: 12.5px; padding: 8px 12px; border-radius: 9px; cursor: pointer;
+  background: rgba(255,255,255,0.06); color: var(--fg); border: 1px solid var(--line);
+}
+.mp-btn:hover { background: rgba(255,255,255,0.12); }
+.mp-btn.primary { background: var(--accent); color: #1a1a1a; border-color: transparent; font-weight: 600; }
+.mp-btn.danger { color: var(--neg); }
+.mp-busy .mp-btn { opacity: 0.5; pointer-events: none; }
+.mp-players { display: flex; flex-direction: column; gap: 4px; }
+.mp-player { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.mp-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.mp-chatlog { display: flex; flex-direction: column; gap: 4px; max-height: 150px; overflow-y: auto; padding: 6px; border-radius: 8px; background: rgba(0,0,0,0.25); }
+.mp-chatline { font-size: 12px; line-height: 1.35; word-break: break-word; }
+@media (max-width: 760px) { .mp-panel { width: min(330px, 94vw); } }

@@ -18,7 +18,7 @@ import { T_DOCKS, DOCK_JOBS, T_GAS, T_HYDRO, T_NUCLEAR } from '../constants';
 import { COST_MOTORWAY, COST_RAMP, COST_HIGHWAY2 } from '../constants';
 import { COST_AVENUE, COST_LANE, COST_HIGHWAY, COST_LIGHT, COST_STOP, COST_CALM, COST_ROAD, COST_ROUNDABOUT, COST_ZONE, SERVICES, T_COAL, T_OUTLET, T_PUMP, T_TOWER, T_WIND, T_SOLAR } from '../constants';
 import { icon } from './icons';
-import { getLang, t, serviceName, civicLabel, fundingLabel, policyText, milestoneName, milestoneUnlocks, taxLabel } from '../i18n';
+import { getLang, t, serviceName, civicLabel, fundingLabel, policyText, milestoneName, milestoneUnlocks, taxLabel, translateUiMessage } from '../i18n';
 
 /** Local shorthand for tool strings: French when the UI language is French, English otherwise. */
 const L = (en: string, fr: string): string => getLang() === 'fr' ? fr : en;
@@ -1107,7 +1107,7 @@ export class Hud {
 
   /** A message that can be looked at takes you there; the rest just read. */
   private messageRow(m: CityMessage): HTMLElement {
-    const row = el('button', 'message', m.text);
+    const row = el('button', 'message', translateUiMessage(m.text));
     row.addEventListener('click', () => {
       if (this.messageActions.focusOn(m.id)) this.messagePop.classList.remove('show');
       else this.toast(L('Nothing to show for that one yet', 'Rien à montrer pour l’instant'));
@@ -1118,7 +1118,7 @@ export class Hud {
   private messageActions!: HudActions;
   private toastTimer = 0;
   toast(msg: string): void {
-    this.toastEl.textContent = msg;
+    this.toastEl.textContent = translateUiMessage(msg);
     this.toastEl.classList.add('show');
     clearTimeout(this.toastTimer);
     this.toastTimer = window.setTimeout(() => this.toastEl.classList.remove('show'), 2600);

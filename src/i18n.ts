@@ -6,8 +6,8 @@
  * main menu, settings, tutorial, help, build categories and tools, budget,
  * policies, milestones, civic needs and service names.
  *
- * Deeper simulation messages (inspector details, toasts, city messages) stay
- * in English for now and fall back gracefully through `t()`.
+ * City messages and interface notices are also translated at their display
+ * boundary through `translateUiMessage()`.
  */
 
 export type Lang = 'en' | 'fr';
@@ -326,4 +326,88 @@ export function milestoneName(index: number, english: string): string {
 export function milestoneUnlocks(index: number, english: string): string {
   if (current !== 'fr') return english;
   return MILESTONE_FR[index]?.unlocks ?? english;
+}
+
+const UI_MESSAGES_FR: Record<string, string> = {
+  'Not enough money': 'Fonds insuffisants',
+  'The mapÔÇÖs own motorway cannot be reshaped': 'LÔÇÖautoroute dÔÇÖorigine ne peut pas ├¬tre modifi├®e',
+  "The map's own motorway cannot be reshaped": 'LÔÇÖautoroute dÔÇÖorigine ne peut pas ├¬tre modifi├®e',
+  "The map's own motorway cannot be changed": 'LÔÇÖautoroute dÔÇÖorigine ne peut pas ├¬tre modifi├®e',
+  'Roundabouts keep their shape': 'Les ronds-points gardent leur forme',
+  'Roundabouts are removed with the bulldozer': 'Les ronds-points se retirent avec le bulldozer',
+  'Offices unlock at Thriving town (900 residents)': 'Les bureaux se d├®bloquent ├á Ville prosp├¿re (900 habitants)',
+  'Leisure & tourism unlocks at Small town (400 residents)': 'Les loisirs et le tourisme se d├®bloquent ├á Petite ville (400 habitants)',
+  'City entrances unlock at Small town': 'Les entr├®es de ville se d├®bloquent ├á Petite ville',
+  'New city entrance opened. Connect its avenue to your neighborhoods.': 'Nouvelle entr├®e de ville ouverte. Reliez son avenue ├á vos quartiers.',
+  'Traffic lights go on junctions of three or more roads': 'Les feux sÔÇÖinstallent aux carrefours dÔÇÖau moins trois routes',
+  'Roundabouts do not need lights': 'Les ronds-points nÔÇÖont pas besoin de feux',
+  'Stop signs go on junctions of three or more roads': 'Les stops sÔÇÖinstallent aux carrefours dÔÇÖau moins trois routes',
+  'Roundabouts already give way': 'Les ronds-points ont d├®j├á la priorit├®',
+  'Bike lanes need a surface street or avenue away from roundabouts': 'Les pistes cyclables exigent une rue ou une avenue au sol, hors rond-point',
+  'Pick a street to calm': 'Choisissez une rue ├á apaiser',
+  'Expressways and ramps cannot be calmed': 'Les voies rapides et les bretelles ne peuvent pas ├¬tre apais├®es',
+  'Roundabout direction is fixed': 'Le sens du rond-point est fixe',
+  'No room for a roundabout here': 'Il nÔÇÖy a pas assez de place pour un rond-point ici',
+  'New map. Build out from the end of the two-lane highway.': 'Nouvelle carte. Prolongez la route depuis lÔÇÖextr├®mit├® de lÔÇÖautoroute ├á deux voies.',
+  'Demo city loaded': 'Ville de d├®mo charg├®e',
+  'Link copied to clipboard': 'Lien copi├® dans le presse-papiers',
+  'Infinite money on': 'Argent infini activ├®',
+  'Infinite money off': 'Argent infini d├®sactiv├®',
+  'Undone: the last change was taken back and refunded': 'Action annul├®e : la derni├¿re modification a ├®t├® retir├®e et rembours├®e',
+  'Nothing to undo': 'Rien ├á annuler',
+  'Build a road first, then take a car out on it.': 'Construisez dÔÇÖabord une route, puis sortez une voiture.',
+  'That save could not be read': 'Impossible de lire cette sauvegarde',
+  'That link is from an older version and cannot be loaded': 'Ce lien provient dÔÇÖune ancienne version et ne peut pas ├¬tre charg├®',
+  'Signal removed': 'Feux supprim├®s',
+  'Every movement needs a green in some phase: give it one elsewhere first': 'Chaque mouvement doit avoir un feu vert dans une phase : ajoutez-le dÔÇÖabord dans une autre phase',
+  'A robbery got away with $1,200. Police stations respond to alarms nearby.': 'Un braquage a rapport├® 1 200 $ aux voleurs. Les commissariats proches r├®pondent aux alarmes.',
+  'The river is over its banks: water is spreading over the land. Lower any dam, or raise the ground, to hold it back.': 'La rivi├¿re d├®borde et envahit les terres. Abaissez un barrage ou rehaussez le terrain pour contenir lÔÇÖeau.',
+  '$6,000 received. Repayment: $6/s for 1,100 simulation seconds.': '6 000 $ re├ºus. Remboursement : 6 $/s pendant 1 100 secondes de simulation.',
+  'City loan repaid.': 'Pr├¬t municipal rembours├®.',
+  'No outstanding loan.': 'Aucun pr├¬t en cours.',
+};
+
+/** Translate interface notices at their display boundary; unknown text remains readable in English. */
+export function translateUiMessage(text: string): string {
+  if (current !== 'fr') return text;
+  if (UI_MESSAGES_FR[text]) return UI_MESSAGES_FR[text];
+
+  let m: RegExpMatchArray | null;
+  if ((m = text.match(/^Grid snap (on|off): (.+)$/))) {
+    return m[1] === 'on' ? 'Magn├®tisme activ├® : les points de route suivent le centre des cases' : 'Magn├®tisme d├®sactiv├® : routes libres, avec rep├¿res et angles de 15┬░';
+  }
+  if ((m = text.match(/^(.+) unlocks at city level (\d+)\.$/))) return `${m[1]} se d├®bloque au niveau de ville ${m[2]}.`;
+  if ((m = text.match(/^Repay the existing loan before borrowing again\. Early repayment needs enough cash\.$/))) return 'Remboursez le pr├¬t en cours avant dÔÇÖen contracter un autre. Un remboursement anticip├® exige assez de fonds.';
+  if ((m = text.match(/^Load ÔÇ£(.+)ÔÇØ$/))) return `Ville ┬½ ${m[1]} ┬╗ charg├®e`;
+  if ((m = text.match(/^Loaded ÔÇ£(.+)ÔÇØ$/))) return `Ville ┬½ ${m[1]} ┬╗ charg├®e`;
+  if ((m = text.match(/^Delete ÔÇ£(.+)ÔÇØ\?$/))) return `Supprimer ┬½ ${m[1]} ┬╗ ?`;
+  if ((m = text.match(/^Achievement: (.+) ÔÇö (.+)$/))) return `Succ├¿s : ${m[1]} ÔÇö ${m[2]}`;
+  if ((m = text.match(/^(\d+) building fires: fire engines need working stations and clear road access$/))) return `${m[1]} incendie(s) : les pompiers ont besoin de casernes en service et dÔÇÖun acc├¿s routier d├®gag├®`;
+  if ((m = text.match(/^(\d+) robbery in progress: the nearest police station is on its way$/))) return `${m[1]} braquage(s) en cours : le commissariat le plus proche est en route`;
+  if ((m = text.match(/^(\d+) street racers are out: calmed streets and signals slow them down$/))) return `${m[1]} course(s) de rue : les rues apais├®es et les feux les ralentissent`;
+  if ((m = text.match(/^(\d+) traffic collisions: blocked vehicles await police or recovery$/))) return `${m[1]} collision(s) : les v├®hicules bloqu├®s attendent la police ou le d├®pannage`;
+  if ((m = text.match(/^(\d+) crime hotspots: police visits deter crime and restore tax revenue$/))) return `${m[1]} foyer(s) de d├®linquance : les patrouilles la freinent et r├®tablissent les recettes fiscales`;
+  if ((m = text.match(/^(\d+) homes losing services: inspect the amber markers before they downgrade$/))) return `${m[1]} logement(s) perdent leurs services : inspectez les marqueurs orange avant leur d├®classement`;
+
+  const exact: Record<string, string> = {
+    'Flood! The river is swollen and climbing its banks. Flood barriers and raised ground keep the water off the streets': 'Inondation ! La rivi├¿re monte et d├®borde. Les digues et le terrain rehauss├® emp├¬chent lÔÇÖeau dÔÇÖenvahir les rues.',
+    'Tornado crossing the valley: buildings in its path are being damaged': 'Une tornade traverse la vall├®e et endommage les b├ótiments sur son passage.',
+    'Rubbish is piling up: build recycling centres so garbage trucks can collect it': 'Les d├®chets sÔÇÖaccumulent : construisez des centres de recyclage pour permettre leur collecte.',
+    'Shops are importing most of their stock: zone industry or farmland to supply them': 'Les commerces importent la plupart de leurs marchandises : zonez de lÔÇÖindustrie ou des fermes pour les approvisionner.',
+    'Draw a street from the end of the two-lane highway, then zone beside it': 'Tracez une rue depuis lÔÇÖextr├®mit├® de lÔÇÖautoroute ├á deux voies, puis zonez le long de celle-ci.',
+    'Treasury in debt: open Budget to reduce funding or take a recovery loan. Existing zones can still grow.': 'La ville est endett├®e : ouvrez le budget pour r├®duire les financements ou prendre un pr├¬t de relance. Les zones existantes peuvent encore grandir.',
+    'No power: build a wind turbine or a coal plant next to a road': 'Pas dÔÇÖ├®lectricit├® : construisez une ├®olienne ou une centrale ├á charbon pr├¿s dÔÇÖune route.',
+    'Power shortage': 'P├®nurie dÔÇÖ├®lectricit├®',
+    'No water: build a water tower, or a pump on the river': 'Pas dÔÇÖeau : construisez un ch├óteau dÔÇÖeau ou une pompe sur la rivi├¿re.',
+    'Water shortage': 'P├®nurie dÔÇÖeau',
+    'No sewage: build an outlet on the river, downstream of any pump': 'Aucun assainissement : construisez un ├®missaire sur la rivi├¿re, en aval des pompes.',
+    'Sewage is backing up': 'Les eaux us├®es d├®bordent',
+    'Dirty drinking water: move pumps upstream of outlets and towers off polluted ground': 'Eau potable pollu├®e : placez les pompes en amont des ├®missaires et ├®loignez les ch├óteaux dÔÇÖeau des sols pollu├®s.',
+    'Pollution is reaching homes': 'La pollution atteint les logements',
+    'Gridlock: try buses, rail, avenues or another city entrance': 'Embouteillages : essayez les bus, le train, les avenues ou une autre entr├®e de ville.',
+    'Homes need healthcare: place a clinic near residents': 'Les logements ont besoin de soins : placez un dispensaire pr├¿s des habitants.',
+    'Education limits growth: place schools near homes': 'Le manque dÔÇÖ├®ducation freine la croissance : placez des ├®coles pr├¿s des logements.',
+    'Waste coverage is low: build a recycling center': 'La collecte des d├®chets est insuffisante : construisez un centre de recyclage.',
+  };
+  return exact[text] ?? text;
 }

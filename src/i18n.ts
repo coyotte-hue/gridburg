@@ -283,6 +283,19 @@ export function zoneName(english: string): string {
   return ZONE_FR[english] ?? english;
 }
 
+/** Ground the inspector names a tile by when it holds no building: the river, a road, bare land. */
+const GROUND_FR: Record<string, string> = {
+  River: 'Rivière',
+  Road: 'Route',
+  'Unzoned land': 'Terrain non zoné',
+};
+
+/** The title the inspector puts on a tile: a service, a zone, or just the ground under it. */
+export function inspectorName(english: string): string {
+  if (current !== 'fr') return english;
+  return SERVICE_FR[english] ?? ZONE_FR[english] ?? GROUND_FR[english] ?? english;
+}
+
 export function taxLabel(english: string): string {
   if (current !== 'fr') return english;
   const map: Record<string, string> = {
@@ -440,6 +453,7 @@ export function raceKindText(id: string, fallback: { label: string; blurb: strin
 // ---- inspector strings ----
 
 const INSPECTOR_EXACT_FR: Record<string, string> = {
+  'Ready to zone or build': 'Prêt à zoner ou à construire',
   'Waiting for construction': 'En attente de construction',
   'Maximum building level': 'Niveau de bâtiment maximum',
   'Operating': 'En service',
@@ -471,6 +485,7 @@ const INSPECTOR_EXACT_FR: Record<string, string> = {
   'Runs two patrol cars at once across a wider district, and answers robberies first.': 'Fait tourner deux voitures de patrouille en même temps sur un large secteur, et répond aux braquages en priorité.',
   'Dispatches patrol cars to nearby buildings. Completed visits deter crime for three minutes; cars also respond to collisions.': 'Envoie des patrouilles vers les bâtiments voisins. Les rondes dissuadent la délinquance pendant 3 minutes ; intervient aussi sur les accidents.',
   'Dispatches one fire engine at a time to reachable fires. After arrival, firefighting takes eight seconds.': 'Envoie un fourgon vers les incendies accessibles. Sur place, l’extinction dure 8 secondes.',
+  'Filters 95% of effluent with full electricity. Power shortages reduce filtration.': 'Filtre 95 % des effluents s’il est alimenté en électricité. Les pénuries d’électricité réduisent la filtration.',
 };
 
 export function translateInspectorText(text: string): string {
@@ -515,8 +530,8 @@ export function translateInspectorText(text: string): string {
   if ((m = text.match(/^Zone demand: (-?\d+)%$/))) {
     return `Demande de zone : ${m[1]} %`;
   }
-  if ((m = text.match(/^Visitor appeal: \$([0-9.]+)\s+\(parks and waterfront raise it\)$/))) {
-    return `Attrait touristique : ${m[1]} $ (parcs et berges l’augmentent)`;
+  if ((m = text.match(/^Visitor appeal: ×([0-9.]+)\s+\(parks and waterfront raise it\)$/))) {
+    return `Attrait touristique : ×${m[1]} (parcs et berges l’augmentent)`;
   }
   if ((m = text.match(/^Funding: (\d+)%\s+·\s+upkeep\s+\$([0-9.]+)\/s$/))) {
     return `Financement : ${m[1]} % · entretien ${m[2]} $/s`;

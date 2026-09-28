@@ -89,9 +89,9 @@ Le jeu existe en **français** et en **anglais**. La langue est détectée autom
 
 ## Progression et services de quartier
 
-Grandissez de Campement à Métropole sur sept paliers définitifs, à 0, 120, 400, 900, 1 800, 3 500 et 6 500 habitants. Chaque palier offre une subvention unique et débloque des services. La pastille en haut à gauche porte niveau et bonheur ; cliquez-la pour la feuille de route et la couverture en direct.
+Grandissez de Campement à Ville mondiale sur neuf paliers définitifs, à 0, 120, 400, 900, 1 800, 3 500, 6 500, 10 000 et 15 000 habitants. Chaque palier offre une subvention unique et débloque des services. La pastille en haut à gauche porte niveau et bonheur ; cliquez-la pour la feuille de route et la couverture en direct.
 
-Huit bâtiments ont modèles et coûts propres : parcs de quartier, dispensaires, écoles primaires, casernes, commissariats, centres de recyclage, universités et fermes solaires. Le menu Services montre capacité, portée et conditions ; l'anneau vert prévisualise la zone desservie avant la pose. Les fermes solaires sont dans Électricité.
+Quarante-sept bâtiments ont leurs propres modèles et leurs propres coûts, de l'éolienne à la centrale nucléaire, en passant par les hôpitaux, les écoles, les casernes, les déchèteries et les gares. Le menu Services montre capacité, portée et conditions ; l'anneau vert prévisualise la zone desservie avant la pose. Les fermes solaires sont dans Électricité.
 
 Les services partagent leur capacité entre riverains, et les deux bouts doivent rejoindre l'autoroute. Couverture, pollution, réseaux, impôts et trajets influent sur bonheur et demande de logements. Dès Village en croissance, les logements exigent santé et éducation pour devenir appartements. Les tours se débloquent à Ville prospère ; elles exigent aussi pompiers, sécurité, déchets et loisirs. Pompiers et police apportent couverture et croissance, et envoient des véhicules aux incidents comme en patrouille.
 
@@ -214,6 +214,6 @@ npm run dev
 
 ## Absent du jeu
 
-Pas d'habitants individuels (gens et trajets comptés, pas simulés un par un), pas de carte au-delà de 80 × 80 cases, et pas de terrassement des collines : elles restent décoratives, et la grille reste à niveau.
+Pas d'habitants individuels : gens et trajets sont comptés, pas simulés un par un. La carte fait 160 × 160 cases, ouverte au départ sur 80 × 80 et achetée ensuite par parcelles de 20 × 20 (8 000 $, puis 2 500 $ de plus par parcelle). Le relief se modèle sur toute la grille : abaisser, élever et aplanir font des tas et des lagoons, et les versants raides arrêtent routes et bâtiments. Il n'y a pas non plus d'écran de victoire : la ville se joue jusqu'au niveau Ville mondiale, à 15 000 habitants.
 
 Licence MIT.

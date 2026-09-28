@@ -263,15 +263,15 @@ fix them. Keep the lights on, the water clean, and the factories away from the h
 
 ## City progression and neighborhood services
 
-Grow from Settlement to Metropolis through seven permanent city levels, at 0, 120, 400,
-900, 1,800, 3,500 and 6,500 residents. Each new milestone grants money once and unlocks
+Grow from Settlement to World city through nine permanent city levels, at 0, 120, 400,
+900, 1,800, 3,500, 6,500, 10,000 and 15,000 residents. Each new milestone grants money once and unlocks
 services. The level chip in the top-left corner carries your level and happiness; click it for the
 roadmap and live service coverage.
 
-Eight new buildings have distinct models and ongoing costs: neighborhood parks, medical
-clinics, elementary schools, fire stations, police stations, recycling centers, universities,
-and solar farms. The Services menu shows capacity, range and unlock requirements; the green
-ring previews the area served before placement. Solar farms are in Electricity.
+Forty-seven buildings have distinct models and ongoing costs, from the wind turbine to the nuclear
+plant, through hospitals, schools, fire stations, recycling centers and stations. The Services menu
+shows capacity, range and unlock requirements; the green ring previews the area served before
+placement. Solar farms are in Electricity.
 
 Services share their capacity among nearby residents, and both ends must connect to the
 highway. Coverage, pollution, utilities, taxes and commuting influence happiness and housing
@@ -452,8 +452,11 @@ the workflow in `.github/workflows/deploy.yml`.
 
 ## Not in it
 
-Individual citizens (people and trips are counted, not simulated one by one), a map bigger than 80 × 80
-cells, and terraforming of the hills: they stay scenic, and the building grid stays level.
+Individual citizens: people and trips are counted, not simulated one by one. The map is 160 × 160
+cells, open at 80 × 80 to begin with and bought afterwards in 20 × 20 parcels ($8,000, then $2,500 more
+per parcel). The ground is yours to shape everywhere on the grid: lowering, raising and flattening
+raise mounds and dig lagoons, and steep slopes block roads and buildings. There is no victory screen
+either: the city is played up to World city, at 15,000 residents.
 
 MIT license.
 

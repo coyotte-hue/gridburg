@@ -8,6 +8,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
   }
   return nextResolve(specifier, context);
 }});
+const C = await import('../src/constants.ts');
 const N = await import('../src/roads/network.ts');
 const L = await import('../src/roads/lanes.ts');
 const { Network, HALF_WIDTH, KIND_ROAD, KIND_AVENUE, KIND_HIGHWAY, KIND_MOTORWAY, KIND_HIGHWAY2, KIND_LANE } = N;
@@ -196,13 +197,16 @@ const { RoadLayer } = await import('../src/render/roads.ts');
 const { rasterize } = await import('../src/roads/raster.ts');
 const { generateTerrain } = await import('../src/terrain.ts');
 const terrain = generateTerrain(3); terrain.water.fill(0);
-/** The asphalt of one segment as drawn: how far it reaches either side of z = 30 (world z −10). */
+/** The asphalt of one segment as drawn: how far it reaches either side of the road's own centre line. */
 function asphaltSpan(net, seg) {
   const layer = new RoadLayer();
   layer.rebuild(net, terrain);
   const [a, b] = layer.ranges.get(seg.id), pos = layer.mesh.geometry.attributes.position;
+  // The layer draws the map centred on its middle tile, so a road at map z = 30 lands at
+  // 30 - GRID/2. Deriving that from the grid keeps this true when the map changes size.
+  const centre = 30 - C.GRID / 2;
   let lo = Infinity, hi = -Infinity;
-  for (let v = a; v < b; v++) { lo = Math.min(lo, pos.getZ(v) + 10); hi = Math.max(hi, pos.getZ(v) + 10); }
+  for (let v = a; v < b; v++) { const d = pos.getZ(v) - centre; lo = Math.min(lo, d); hi = Math.max(hi, d); }
   return [-lo, hi];
 }
 
@@ -226,7 +230,7 @@ test('the raster paves the widened side and leaves the other alone', () => {
   const before = rasterize(net).cover;
   if (net.nodes.get(seg.b).x > net.nodes.get(seg.a).x) seg.addR = 2; else seg.addL = 2;
   const after = rasterize(net).cover;
-  const at = (x, z) => z * 80 + x;
+  const at = (x, z) => z * C.GRID + x;
   assert.equal(before[at(30, 32)], 0);
   assert.equal(after[at(30, 32)], 1, 'south of the road is paved now');
   assert.equal(after[at(30, 28)], before[at(30, 28)], 'north is as it was');

@@ -18,7 +18,7 @@ import { T_DOCKS, DOCK_JOBS, T_GAS, T_HYDRO, T_NUCLEAR } from '../constants';
 import { COST_MOTORWAY, COST_RAMP, COST_HIGHWAY2 } from '../constants';
 import { COST_AVENUE, COST_LANE, COST_HIGHWAY, COST_LIGHT, COST_STOP, COST_CALM, COST_ROAD, COST_ROUNDABOUT, COST_ZONE, SERVICES, T_COAL, T_OUTLET, T_PUMP, T_TOWER, T_WIND, T_SOLAR } from '../constants';
 import { icon } from './icons';
-import { getLang, t, serviceName, zoneName, civicLabel, fundingLabel, policyText, milestoneName, milestoneUnlocks, taxLabel, translateInspectorText, translateUiMessage, ringSizeText } from '../i18n';
+import { getLang, t, serviceName, inspectorName, civicLabel, fundingLabel, policyText, milestoneName, milestoneUnlocks, taxLabel, translateInspectorText, translateUiMessage, ringSizeText } from '../i18n';
 
 /** Local shorthand for tool strings: French when the UI language is French, English otherwise. */
 const L = (en: string, fr: string): string => getLang() === 'fr' ? fr : en;
@@ -930,7 +930,7 @@ export class Hud {
   showInspection(report: TileReport | null): void {
     this.inspector.classList.toggle('open', report !== null);
     if (!report) return;
-    const title = el('h2', undefined, zoneName(serviceName(report.name)));
+    const title = el('h2', undefined, inspectorName(report.name));
     const where = el('p', 'pnote', `${L('Cell', 'Case')} ${report.tile % GRID}, ${Math.floor(report.tile / GRID)}${report.occupants ? ` · ${report.occupants} ${report.name === 'Residential' ? L('residents', 'habitants') : L('jobs', 'emplois')}` : ''}`);
     const status = el('p', report.neglect ? 'neg' : 'inspection-status', translateInspectorText(report.status));
     const details = report.details.map(detail => el('p', 'pnote', translateInspectorText(detail)));

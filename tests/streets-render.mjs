@@ -9,6 +9,7 @@ registerHooks({ resolve(specifier, context, nextResolve) {
   return nextResolve(specifier, context);
 }});
 const { Network, HALF_WIDTH } = await import('../src/roads/network.ts');
+const C = await import('../src/constants.ts');
 const { crossingApproaches } = await import('../src/render/crossings.ts');
 const { RoadLayer } = await import('../src/render/roads.ts');
 const { RiverLayer } = await import('../src/render/river.ts');
@@ -54,7 +55,9 @@ for (const kind of [0, 1, 2, 3]) {
   const radius = roundabout.r - HALF_WIDTH[kind] - 0.12;
   assert.ok(vertices.count > 0, 'roundabout includes fountain and trees');
   for (let i = 0; i < vertices.count; i++) {
-    assert.ok(Math.hypot(vertices.getX(i) - roundabout.x + 40, vertices.getZ(i) - roundabout.z + 40) < radius,
+    // The layer draws the map centred on its middle tile, so add half the grid back before
+    // measuring against a roundabout centre in map coordinates.
+    assert.ok(Math.hypot(vertices.getX(i) - roundabout.x + C.GRID / 2, vertices.getZ(i) - roundabout.z + C.GRID / 2) < radius,
       'all decorative vertices stay inside the island');
   }
   assert.equal(crossingApproaches(ring).size, 0, 'ring arcs never receive zebra crossings');

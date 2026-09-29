@@ -457,7 +457,7 @@ test('restoring civic service clears the downgrade countdown', () => {
   const home = city.kind.indexOf(C.T_RES);
   city.level[home] = 2; city.neglect = new Uint8Array(C.N_TILES); city.neglect[home] = 170;
   // With only one occupied home, every nearby provider has spare capacity.
-  const nearby = [...city.kind.keys()].filter(i => city.kind[i] === C.T_RES && Math.hypot(i % 80 - home % 80, Math.floor(i / 80) - Math.floor(home / 80)) < 4);
+  const nearby = [...city.kind.keys()].filter(i => city.kind[i] === C.T_RES && Math.hypot(i % C.GRID - home % C.GRID, Math.floor(i / C.GRID) - Math.floor(home / C.GRID)) < 4);
   assert.ok(nearby.length >= 2);
   city.kind[nearby[0] === home ? nearby[1] : nearby[0]] = C.T_CLINIC;
   const school = nearby.find(i => i !== home && city.kind[i] !== C.T_CLINIC);
@@ -476,6 +476,7 @@ test('regular clock publishes population matching rendered building levels', () 
 
 const { transitNetwork, transitLineForTrip, intercityStations } = await import('../src/sim/transit.ts');
 const W = await import('../src/sim/water.ts');
+const D = await import('../src/sim/disasters.ts');
 const { footprint, footprintSize, siteOwners } = await import('../src/sites.ts');
 const { entrancePlan, entrySite } = await import('../src/roads/entries.ts');
 const { railPath } = await import('../src/roads/rail.ts');
@@ -1434,7 +1435,9 @@ test('street detail streams in around the camera, nearest first and finest near,
   const layer = new StreetDetailLayer();
   layer.setDetail(1);
   layer.setActive(true, source);
-  const eye = { x: 42.5 - 40, y: 0.13, z: 24.5 - 40 };
+  // The detail layer works in world space, whose origin is the map's middle tile; the demo's
+  // downtown sits at 40..119 on both axes, so the middle of the grid is the middle of the city.
+  const eye = { x: 0, y: 0.13, z: 0 };
   layer.update(eye, true);
   const { chunks, triangles } = layer.stats;
   assert.ok(chunks > 10 && triangles > 20000, `Detail should fill the streets around the camera: ${JSON.stringify(layer.stats)}`);
@@ -1463,7 +1466,7 @@ test('street detail streams in around the camera, nearest first and finest near,
 
   // From above, close in: coarser chunks round the point looked at, with the rooftops dressed.
   layer.setOverview(true, source);
-  layer.update({ x: 42.5 - 40, z: 24.5 - 40 }, true, 10);
+  layer.update({ x: 0, z: 0 }, true, 10);
   assert.ok(layer.stats.chunks > 5, 'Detail streams in round the point the camera looks at');
   assert.ok(layer.group.children.every(m => !m.castShadow), 'From above nothing is built at the finest level');
   let high = 0;
@@ -1526,7 +1529,7 @@ test('street races are planned on the city streets, with barriers on the side st
     // The start and the finish lie along a street, clear of any junction.
     for (const d of r.kind === 'drag' ? [] : r.loop ? [0] : [0, r.length]) {
       const p = routeAt(r, d);
-      for (const n of net.nodes.values()) if (net.degree(n.id) >= 3) assert.ok(Math.hypot(n.x - 40 - p.x, n.z - 40 - p.z) > 0.6, `${r.name} starts and finishes clear of junctions`);
+      for (const n of net.nodes.values()) if (net.degree(n.id) >= 3) assert.ok(Math.hypot(n.x - C.GRID / 2 - p.x, n.z - C.GRID / 2 - p.z) > 0.6, `${r.name} starts and finishes clear of junctions`);
     }
     // The rivals' line rounds the corners off: no right-angle pivots from one step to the next.
     let sharpest = 0;
@@ -1718,9 +1721,9 @@ test('floods spare what a barrier protects, and tornadoes damage what they cross
   let damaged = 0, notices = 0, surge = 1;
   const ctx = { kind, level, water, riverDistance: dist, cityLevel: 3, enabled: true, rate: 1, random: C.mulberry32(5), damage: (t, n) => { level[t] = Math.max(0, level[t] - n); damaged++; }, notice: () => notices++, surge: f => { surge = f; } };
   d.start('flood', ctx);
-  assert.equal(surge, 3, 'A flood is a surge down the river');
+  assert.equal(surge, D.FLOOD_SURGE, 'A flood is a surge down the river');
   for (let t = 0; t < 30; t++) d.step(ctx);
-  assert.equal(surge, 3, 'which keeps coming');
+  assert.equal(surge, D.FLOOD_SURGE, 'which keeps coming');
   for (let t = 0; t < 50; t++) d.step(ctx);
   assert.ok(surge === 1 && d.active === null && notices >= 2, 'then the river returns to normal and the flood is over');
   // A tornado straight across the houses along the river.
@@ -1821,10 +1824,13 @@ test('water flows down the river, gathers behind a dam until it spills, and drai
   for (let s = 0; s < W.WATER_HZ * 360; s++) water.step();
   assert.equal(water.floodedCount, 0, 'With the dam gone the floodwater drains away');
   assert.ok(Math.abs(mean(up) - settledUp) < 0.15, `and the river settles back to the level it held before the dam (${(mean(up) - settledUp).toFixed(2)} away from it)`);
-  // A storm upstream: three times the flow tops the low banks near the inlet, then recedes.
-  water.surge = 3;
-  for (let s = 0; s < W.WATER_HZ * 50; s++) water.step();
-  assert.ok(water.floodedCount > 0, 'A surge floods the low ground');
+  // A storm upstream: the flood's own surge tops the low banks near the inlet, then recedes.
+  // This drives the disaster's real numbers instead of a copy of them. The test used to hardcode
+  // "3 for 50 seconds", which is why the flood could stop working altogether when the map grew to
+  // 160x160 and still pass: the copy never changed with the thing it was standing in for.
+  water.surge = D.FLOOD_SURGE;
+  for (let s = 0; s < W.WATER_HZ * D.FLOOD_TIME * 2 / 3; s++) water.step();
+  assert.ok(water.floodedCount > 0, `A surge floods the low ground (${water.floodedCount} cells under water)`);
   water.surge = 1;
   for (let s = 0; s < W.WATER_HZ * 120; s++) water.step();
   assert.equal(water.floodedCount, 0, 'and the flood goes down when it passes');
@@ -1897,10 +1903,13 @@ test('nothing stands on the carriageway: lamps, signals, stop signs, furniture, 
   const m = new THREE.Matrix4(), p = new THREE.Vector3();
   const offenders = [];
   const check = (what, net, x, z, tolerance = 0) => {
+    // The layers draw the map centred on its middle tile, so add half the grid back to land in the
+    // network's own coordinates. A hardcoded 40 was right at 80x80 and wrong once the map grew.
+    const mx = x + C.GRID / 2, mz = z + C.GRID / 2;
     for (const seg of net.segs.values()) {
       if (seg.structure === 2) continue;
-      const d = Network.nearestOn(seg, x + 40, z + 40).dist;
-      if (d < HALF_WIDTH[seg.kind] - tolerance) { offenders.push(`${what} at ${x.toFixed(1)},${z.toFixed(1)} is ${d.toFixed(2)} from a ${ROAD_LABEL[seg.kind]} centre line`); return; }
+      const d = Network.nearestOn(seg, mx, mz).dist;
+      if (d < HALF_WIDTH[seg.kind] - tolerance) { offenders.push(`${what} at ${mx.toFixed(1)},${mz.toFixed(1)} is ${d.toFixed(2)} from a ${ROAD_LABEL[seg.kind]} centre line`); return; }
     }
   };
   const instances = (what, net, mesh, tolerance) => { for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, m); p.setFromMatrixPosition(m); check(what, net, p.x, p.z, tolerance); } };
@@ -1939,7 +1948,7 @@ test('streetlights never stand on another road where two roads meet at a shallow
   for (let i = 0; i < poles.count; i++) {
     poles.getMatrixAt(i, m); p.setFromMatrixPosition(m);
     for (const seg of net.segs.values()) {
-      const d = Network.nearestOn(seg, p.x + 40, p.z + 40).dist;
+      const d = Network.nearestOn(seg, p.x + C.GRID / 2, p.z + C.GRID / 2).dist;
       assert.ok(d >= HALF_WIDTH[seg.kind] - 1e-6, `A lamp stands on the asphalt, ${d.toFixed(2)} from a road centre`);
     }
   }
@@ -1967,9 +1976,9 @@ test('forests clear roads, occupied lots and full service footprints, then resto
   const before = trunks.instanceMatrix.array.slice(); const count = trunks.count;
   for (let n = 0; n < trunks.count; n++) {
     trunks.getMatrixAt(n, matrix);
-    const x = Math.floor(matrix.elements[12] + 40), z = Math.floor(matrix.elements[14] + 40);
-    if (x < 0 || x >= 80 || z < 0 || z >= 80) continue;
-    const i = z * 80 + x;
+    const x = Math.floor(matrix.elements[12] + C.GRID / 2), z = Math.floor(matrix.elements[14] + C.GRID / 2);
+    if (x < 0 || x >= C.GRID || z < 0 || z >= C.GRID) continue;
+    const i = z * C.GRID + x;
     assert.equal(city.kind[i], 0); assert.equal(raster.cover[i], 0); assert.equal(owners[i], -1); assert.equal(t.water[i], 0);
   }
   landscape.develop(new Uint8Array(6400).fill(C.T_RES), raster, net);
@@ -1981,10 +1990,19 @@ test('forests clear roads, occupied lots and full service footprints, then resto
 const { structurePlan, roadHeight, BRIDGE_RISE, TUNNEL_DROP } = await import('../src/roads/structures.ts');
 const { StructureLayer } = await import('../src/render/structures.ts');
 test('bridge and tunnel spans cross surface roads without junctions and survive saves', () => {
-  const current = Buffer.from(encode(demoCity()), 'base64url');
-  // Versions before 9 carry no policy mask, rotation block, park paths or extras: drop them all.
-  const legacy = Buffer.concat([current.subarray(0, 28), current.subarray(30, current.length - 4 - extrasLength(demoCity()))]); legacy[0] = 6;
-  assert.ok(decode(legacy.toString('base64url')), 'Version 6 cities remain readable');
+  // A v6 city predates the 160x160 map, so its run-length block holds 80x80 tiles. Build that shape
+  // by hand, like the v3 fixture above: cutting a modern save down and relabelling it leaves the
+  // decoder counting 25,600 tiles against a block written for 6,400, which it rightly refuses.
+  const v6 = new Array(28).fill(0); v6[0] = 6; v6[1] = 10;
+  for (let i = 0; i < 9; i++) v6[19 + i] = 100;   // funding 100% in each budget
+  for (let left = C.LEGACY_GRID * C.LEGACY_GRID; left > 0;) { const run = Math.min(255, left); v6.push(0, run, 0); left -= run; }
+  v6.push(0, 0, 0, 0);                                   // no roads at all
+  const events = new TextEncoder().encode(JSON.stringify({ fires: [], crime: [], patrol: [] }));
+  v6.push(events.length >>> 24, events.length >>> 16, events.length >>> 8, events.length, ...events);
+  const old = decode(Buffer.from(v6).toString('base64url'));
+  assert.ok(old, 'Version 6 cities remain readable');
+  assert.equal(old.kind.length, C.N_TILES, 'and are centred on the expanded map');
+  assert.deepEqual(decode(encode(old)).kind, old.kind, 'and survive a save and reload');
   const net = new Network();
   net.insertPath([{ x: 30, z: 10 }, { x: 30, z: 65 }], 0);
   net.insertPath([{ x: 10, z: 30 }, { x: 60, z: 30 }], 0, false, 1);
@@ -2167,7 +2185,7 @@ test('some houses on a street get a drive with the family car, clear of the kerb
   assert.ok(layer.drives.count > 0, 'Drives are drawn');
   const parked = [...layer.byTile.values()].flat();
   for (const p of parked) {
-    const hit = net.nearestSeg(p.x + 40, p.z + 40, 2);
+    const hit = net.nearestSeg(p.x + C.GRID / 2, p.z + C.GRID / 2, 2);
     // A car on a drive or in a car park sits well back from any traffic lane.
     if (hit) assert.ok(hit.dist >= (hit.seg.kind === KIND_AVENUE ? 0.64 : 0.18) + 0.16 - 5e-3, 'No parked car stands in a traffic lane');
   }
@@ -2182,7 +2200,7 @@ test('the river bank never sags under a building beside it', () => {
   const built = new HillLayer(); built.rebuild(ground, solid);
   let sagged = 0;
   for (const i of bank) {
-    const x = i % C.GRID - 40, z = Math.floor(i / C.GRID) - 40;
+    const x = i % C.GRID - C.GRID / 2, z = Math.floor(i / C.GRID) - C.GRID / 2;
     for (const [fx, fz] of [[0.1, 0.1], [0.5, 0.5], [0.9, 0.9], [0.1, 0.9], [0.9, 0.1]]) {
       if (bare.heightAt(x + fx, z + fz) < -0.02) sagged++;
       assert.ok(built.heightAt(x + fx, z + fz) > -0.02, `The ground under a riverside lot stays level (${built.heightAt(x + fx, z + fz).toFixed(2)})`);

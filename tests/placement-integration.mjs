@@ -40,8 +40,11 @@ function inputFor(game, tool = 'airport', rot = 0) {
 function placementState(game) {
   return { kind: game.kind, water: game.terrain.water, shore: game.terrain.shore, cover: game.raster.cover, owners: game.owners, airportClearance: game.airportClearance };
 }
+// Sites are placed in the middle of the purchased parcels: only the central 80x80 of the 160x160
+// map belongs to a new city, and an airport needs room for its 8x3 site plus a 12-cell approach
+// in every rotation, which the map corner does not leave.
 for (let rot = 0; rot < 4; rot++) test(`Airport turn ${rot}: preview/commit exclusion, rotation payload, removal and spending`, () => {
-  const g = emptyGame(), airport = at(40, 40), frame = airportRunway(airport, rot);
+  const g = emptyGame(), airport = at(80, 80), frame = airportRunway(airport, rot);
   const approach = at(Math.floor(frame.x + 15 * frame.dx), Math.floor(frame.z + 15 * frame.dz));
   assert.equal(g.setKind(airport, C.T_AIRPORT, 12000, rot), true);
   g.flush();
@@ -63,7 +66,7 @@ for (let rot = 0; rot < 4; rot++) test(`Airport turn ${rot}: preview/commit excl
   assert.equal(g.stats.money, money - 45);
 });
 test('Occupied airport approach is rejected by preview and commit without demolition', () => {
-  const g = emptyGame(), airport = at(40, 40), obstacle = at(52, 40);
+  const g = emptyGame(), airport = at(80, 80), obstacle = at(92, 80);
   g.setKind(obstacle, C.T_RES, 0); g.level[obstacle] = 2;
   g.raster.accSeg[airport] = 0;
   assert.match(inputFor(g).serviceProblem(airport, C.T_AIRPORT), /clear buildings/i);
@@ -73,7 +76,7 @@ test('Occupied airport approach is rejected by preview and commit without demoli
   assert.equal(g.kind[obstacle], C.T_RES); assert.equal(g.level[obstacle], 2);
 });
 test('Loading a legacy airport preserves nearby structures and reinstates rotated clearance', () => {
-  const g = emptyGame(), airport = at(40, 40), obstacle = at(40, 33);
+  const g = emptyGame(), airport = at(80, 80), obstacle = at(80, 73);
   const saved = g.snapshot();
   saved.kind[airport] = C.T_AIRPORT; saved.rot[airport] = 1; saved.level[airport] = 1;
   saved.kind[obstacle] = C.T_RES; saved.level[obstacle] = 3;
@@ -84,18 +87,18 @@ test('Loading a legacy airport preserves nearby structures and reinstates rotate
 });
 test('Park pieces round-trip through Game, compact save encoding, and load', () => {
   const g = emptyGame();
-  for (let k = C.T_PATH; k <= C.T_LAWN; k++) assert.equal(g.setKind(at(30 + k - C.T_PATH, 30), k, C.SERVICES[k].cost, k % 4), true);
+  for (let k = C.T_PATH; k <= C.T_LAWN; k++) assert.equal(g.setKind(at(60 + k - C.T_PATH, 70), k, C.SERVICES[k].cost, k % 4), true);
   g.flush();
   const money = g.stats.money;
   const h = emptyGame(); h.load(decode(encode(g.snapshot())));
   for (let k = C.T_PATH; k <= C.T_LAWN; k++) {
-    const tile = at(30 + k - C.T_PATH, 30);
+    const tile = at(60 + k - C.T_PATH, 70);
     assert.equal(h.kind[tile], k); assert.equal(h.level[tile], 1);
   }
   assert.equal(h.stats.money, money);
 });
 test('Decoration replacement works without road access and charges only accepted changes', () => {
-  const g = emptyGame(), tile = at(20, 20), input = inputFor(g, 'tree');
+  const g = emptyGame(), tile = at(70, 70), input = inputFor(g, 'tree');
   assert.equal(g.raster.accSeg[tile], -1);
   assert.equal(input.serviceProblem(tile, C.T_TREE), null);
   assert.equal(decorationPlacementAllowed(tile, placementState(g)), true);
@@ -106,7 +109,7 @@ test('Decoration replacement works without road access and charges only accepted
   assert.equal(g.stats.money, 100000 - C.SERVICES[C.T_TREE].cost - C.SERVICES[C.T_BENCH].cost);
 });
 test('Game rejects decoration overwrites and invalid airport footprints without spending', () => {
-  const g = emptyGame(), tile = at(20, 20);
+  const g = emptyGame(), tile = at(70, 70);
   g.setKind(tile, C.T_RES, 0); g.level[tile] = 2;
   assert.equal(g.setKind(tile, C.T_TREE, 45), false);
   assert.equal(g.setKind(C.N_TILES - 1, C.T_AIRPORT, 12000), false);

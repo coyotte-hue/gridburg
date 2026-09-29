@@ -41,7 +41,14 @@ export interface DisasterContext {
 
 /** How long a flood lasts, and how much extra water comes down the river while it does. */
 export const FLOOD_TIME = 75;
-export const FLOOD_SURGE = 3;
+/**
+ * How much extra water comes down while the surge lasts; it holds for two thirds of the flood.
+ * The river rests a little below the line it is drawn at, and lower on the 160x160 map than on the
+ * 80x80 it grew from, so a surge that used to top the banks now stops short of them: a three-fold
+ * surge left 0-100 cells under water depending on the seed, and none at all on seed 214. Six brings
+ * the flooding back to what the smaller map gave, 950-1,080 cells, and it drains within 45s.
+ */
+export const FLOOD_SURGE = 6;
 const TORNADO_TIME = 36;
 const TORNADO_RADIUS = 1.3;
 

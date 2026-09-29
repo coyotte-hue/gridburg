@@ -334,7 +334,7 @@ export class LandscapeLayer {
         const along = (x - e.x) * -e.dx + (z - e.z) * -e.dz;
         return along >= -2 ? Math.abs((x - e.x) * e.dz - (z - e.z) * e.dx) : Infinity;
       }));
-      const tx = x + 40, tz = z + 40;
+      const tx = x + GRID / 2, tz = z + GRID / 2;
       for (const f of fixed) if (tx >= f.x0 && tx <= f.x1 && tz >= f.z0 && tz <= f.z1) best = Math.min(best, Network.nearestOn(f.s, tx, tz).dist);
       return best;
     };
@@ -363,7 +363,7 @@ export class LandscapeLayer {
     let trees = 0, rocks = 0;
     for (let n = 0; n < 15000; n++) {
       const x = rnd() * 240 - 120, z = rnd() * 240 - 120, s = 0.65 + rnd() * 0.85;
-      const tx = Math.floor(x + 40), tz = Math.floor(z + 40), inside = tx >= 0 && tx < GRID && tz >= 0 && tz < GRID;
+      const tx = Math.floor(x + GRID / 2), tz = Math.floor(z + GRID / 2), inside = tx >= 0 && tx < GRID && tz >= 0 && tz < GRID;
       if (inside) {
         // Reserve roadside lots, including shifted building facades and every airport tile.
         if (blockedTiles[tz * GRID + tx]) continue;

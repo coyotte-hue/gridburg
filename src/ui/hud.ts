@@ -1,7 +1,7 @@
 import { T_TROLLEY, T_TAXI, T_FLOOD_BARRIER, T_LANDMARK, FLOOD_BARRIER_RADIUS, T_PARKING, T_PARKING_M, T_PARKING_L } from '../constants';
 import { COST_DIG, COST_FILL, COST_RAISE, COST_LOWER, TAX_LABELS } from '../extras';
 import type { Taxes } from '../extras';
-import { T_BUS, T_STATION, T_SUBWAY, T_AIRPORT, T_TREATMENT, OFFICE_UNLOCK, ENTRY_UNLOCK, COST_ENTRY, LEISURE_UNLOCK } from '../constants';
+import { GRID, T_BUS, T_STATION, T_SUBWAY, T_AIRPORT, T_TREATMENT, OFFICE_UNLOCK, ENTRY_UNLOCK, COST_ENTRY, LEISURE_UNLOCK } from '../constants';
 import { FUNDING_KEYS, FUNDING_LABELS, fundingOutput, LOAN_AMOUNT, LOAN_TOTAL, LOAN_PAYMENT } from '../management';
 import { POLICIES, POLICY_IDS } from '../policies';
 import type { PolicyId } from '../policies';
@@ -18,7 +18,7 @@ import { T_DOCKS, DOCK_JOBS, T_GAS, T_HYDRO, T_NUCLEAR } from '../constants';
 import { COST_MOTORWAY, COST_RAMP, COST_HIGHWAY2 } from '../constants';
 import { COST_AVENUE, COST_LANE, COST_HIGHWAY, COST_LIGHT, COST_STOP, COST_CALM, COST_ROAD, COST_ROUNDABOUT, COST_ZONE, SERVICES, T_COAL, T_OUTLET, T_PUMP, T_TOWER, T_WIND, T_SOLAR } from '../constants';
 import { icon } from './icons';
-import { getLang, t, serviceName, civicLabel, fundingLabel, policyText, milestoneName, milestoneUnlocks, taxLabel, translateUiMessage } from '../i18n';
+import { getLang, t, serviceName, inspectorName, civicLabel, fundingLabel, policyText, milestoneName, milestoneUnlocks, taxLabel, translateInspectorText, translateUiMessage, ringSizeText } from '../i18n';
 
 /** Local shorthand for tool strings: French when the UI language is French, English otherwise. */
 const L = (en: string, fr: string): string => getLang() === 'fr' ? fr : en;
@@ -200,7 +200,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
 function fmt(n: number): string {
   if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1) + 'M';
   if (Math.abs(n) >= 1e4) return (n / 1e3).toFixed(1) + 'k';
-  return Math.round(n).toLocaleString();
+  return Math.round(n).toLocaleString(getLang() === 'fr' ? 'fr-FR' : 'en-US');
 }
 
 export class Hud {
@@ -440,7 +440,7 @@ export class Hud {
       zoneTaxRows.push(row);
     });
     const incRow = el('div', 'prow');
-    incRow.append(el('span', 'label', 'Net income'), this.budgetIncome);
+    incRow.append(el('span', 'label', L('Net income', 'Revenu net')), this.budgetIncome);
     budget.append(el('div', 'ptitle', t('hud.budget')), taxRow, ...zoneTaxRows, el('p', 'pnote', t('hud.taxNote')));
     this.taxInput.setAttribute('aria-label', L('Tax rate', 'Taux d’imposition'));
     for (const [key, label] of [['fareIncome', L('Transport fares', 'Recettes transport')], ['tollIncome', L('Congestion charge', 'Péage urbain')], ['fishingIncome', L('Fishing', 'Pêche')], ['exportIncome', L('Goods exports', 'Exportations')], ['tourismIncome', L('Tourism', 'Tourisme')], ['taxIncome', L('Tax revenue', 'Recettes fiscales')], ['roadExpense', L('Road upkeep', 'Entretien des routes')], ['serviceExpense', L('Service upkeep', 'Entretien des services')], ['policyExpense', L('Policies', 'Politiques')], ['districtExpense', L('District policies', 'Politiques de quartier')], ['loanExpense', L('Loan payment', 'Remboursement du prêt')]]) {
@@ -645,10 +645,11 @@ export class Hud {
         const ring = el('div', 'modes');
         ring.append(el('span', 'mlabel', t('hud.ring')));
         for (const size of RING_SIZES) {
+          const text = ringSizeText(size.id, size);
           const b = el('button', 'mode');
           b.append(icon(`ring-${size.id}`, 20));
-          b.title = `${size.label}: ${size.hint}${size.cost > 1 ? ` (${money(Math.round(COST_ROUNDABOUT * size.cost))})` : ''}`;
-          b.setAttribute('aria-label', size.label);
+          b.title = `${text.label}: ${text.hint}${size.cost > 1 ? ` (${money(Math.round(COST_ROUNDABOUT * size.cost))})` : ''}`;
+          b.setAttribute('aria-label', text.label);
           b.classList.toggle('active', size.id === 'auto');
           b.addEventListener('click', () => { actions.setRingSize(size.id); this.setRingSize(size.id); });
           this.ringBtns.push([size.id, b]);
@@ -929,16 +930,16 @@ export class Hud {
   showInspection(report: TileReport | null): void {
     this.inspector.classList.toggle('open', report !== null);
     if (!report) return;
-    const title = el('h2', undefined, report.name);
-    const where = el('p', 'pnote', `Cell ${report.tile % 80}, ${Math.floor(report.tile / 80)}${report.occupants ? ` · ${report.occupants} ${report.name === 'Residential' ? 'residents' : 'jobs'}` : ''}`);
-    const status = el('p', report.neglect ? 'neg' : 'inspection-status', report.status);
-    const details = report.details.map(detail => el('p', 'pnote', detail));
+    const title = el('h2', undefined, inspectorName(report.name));
+    const where = el('p', 'pnote', `${L('Cell', 'Case')} ${report.tile % GRID}, ${Math.floor(report.tile / GRID)}${report.occupants ? ` · ${report.occupants} ${report.name === 'Residential' ? L('residents', 'habitants') : L('jobs', 'emplois')}` : ''}`);
+    const status = el('p', report.neglect ? 'neg' : 'inspection-status', translateInspectorText(report.status));
+    const details = report.details.map(detail => el('p', 'pnote', translateInspectorText(detail)));
     const needs = el('div', 'inspection-needs');
     for (const [key, value] of Object.entries(report.coverage)) {
-      const row = el('div', 'finance-row'); row.append(el('span', undefined, CIVIC_LABELS[key as CivicNeed]), el('strong', undefined, `${value}%`)); needs.append(row);
+      const row = el('div', 'finance-row'); row.append(el('span', undefined, civicLabel(CIVIC_LABELS[key as CivicNeed], key)), el('strong', undefined, `${value}%`)); needs.append(row);
     }
     const blockers = el('ul', 'inspection-blockers');
-    for (const reason of report.blockers) blockers.append(el('li', undefined, reason));
+    for (const reason of report.blockers) blockers.append(el('li', undefined, translateInspectorText(reason)));
     this.inspectorBody.replaceChildren(title, where, status, ...details, needs, blockers);
   }
 
@@ -958,7 +959,7 @@ export class Hud {
       input.value = String(s.taxes[z]); this.zoneTaxLabels[z].textContent = `${s.taxes[z]}%`;
     });
     const g = s.goods;
-    this.goodsLine.textContent = `Goods: ${fmt(g.produced)} made, ${fmt(g.needed)} needed a minute · ${fmt(g.exported)} exported of ${fmt(g.capacity)} capacity · ${fmt(g.imported)} imported${g.importShare > 0.3 ? ' — shops lose takings buying in stock, so zone more industry or farms' : ''}. ${fmt(s.tourism.visitors)} visitors a minute.`;
+    this.goodsLine.textContent = L(`Goods: ${fmt(g.produced)} made, ${fmt(g.needed)} needed a minute · ${fmt(g.exported)} exported of ${fmt(g.capacity)} capacity · ${fmt(g.imported)} imported${g.importShare > 0.3 ? ' — shops lose takings buying in stock, so zone more industry or farms' : ''}. ${fmt(s.tourism.visitors)} visitors a minute.`, `Marchandises : ${fmt(g.produced)} produites, ${fmt(g.needed)} nécessaires par minute · ${fmt(g.exported)} exportées sur ${fmt(g.capacity)} de capacité · ${fmt(g.imported)} importées${g.importShare > 0.3 ? ' — les commerces perdent des recettes en important ; zonez plus d’industrie ou de fermes' : ''}. ${fmt(s.tourism.visitors)} visiteurs par minute.`);
     for (const key of FUNDING_KEYS) {
       const slider = this.fundingInputs.get(key)!;
       if (document.activeElement !== slider) {
@@ -976,37 +977,37 @@ export class Hud {
       row.classList.toggle('on', s.policies[id]);
       const cost = spec.base + spec.perResident * s.pop;
       row.querySelector('.policy-cost')!.textContent = locked
-        ? `Unlocks at ${MILESTONES[spec.unlock].name}`
-        : `$${cost.toFixed(2)}/s${s.policies[id] ? '' : ' while active'}`;
+        ? L(`Unlocks at ${MILESTONES[spec.unlock].name}`, `Débloquée à ${milestoneName(spec.unlock, MILESTONES[spec.unlock].name)}`)
+        : L(`$${cost.toFixed(2)}/s${s.policies[id] ? '' : ' while active'}`, `${cost.toFixed(2)} $/s${s.policies[id] ? '' : ' si activée'}`);
     }
     this.borrow.disabled = s.debt > 0;
     this.repay.disabled = s.debt === 0 || s.money < s.debt;
-    this.debtLabel.textContent = s.debt > 0 ? `Balance $${fmt(s.debt)} · ${Math.ceil(s.debt / LOAN_PAYMENT)}s remaining` : 'No outstanding debt';
+    this.debtLabel.textContent = s.debt > 0 ? L(`Balance $${fmt(s.debt)} · ${Math.ceil(s.debt / LOAN_PAYMENT)}s remaining`, `Solde : ${fmt(s.debt)} $ · ${Math.ceil(s.debt / LOAN_PAYMENT)} s restantes`) : L('No outstanding debt', 'Aucun emprunt en cours');
     const milestone = MILESTONES[s.cityLevel];
     const next = MILESTONES[s.cityLevel + 1];
     if (this.previousLevel !== null && s.tick >= this.previousTick && s.cityLevel > this.previousLevel) {
       const grant = MILESTONES.slice(this.previousLevel + 1, s.cityLevel + 1).reduce((sum, m) => sum + m.reward, 0);
-      this.toast(`${milestone.name} reached! +$${fmt(grant)} · ${milestone.unlocks}`);
+      this.toast(L(`${milestone.name} reached! +$${fmt(grant)} · ${milestone.unlocks}`, `${milestoneName(s.cityLevel, milestone.name)} atteint : +${fmt(grant)} $ · ${milestoneUnlocks(s.cityLevel, milestone.unlocks)}`));
     }
     this.previousLevel = s.cityLevel;
     this.previousTick = s.tick;
-    this.cityTitle.textContent = `Level ${s.cityLevel + 1} · ${milestone.name}`;
+    this.cityTitle.textContent = `${L('Level', 'Niveau')} ${s.cityLevel + 1} · ${milestoneName(s.cityLevel, milestone.name)}`;
     this.cityLevel.textContent = `Lv ${s.cityLevel + 1}`;
     this.cityLevel.title = milestone.name;
     this.happiness.textContent = `${s.happiness}%`;
-    this.happiness.title = `${s.happiness}% of residents are happy`;
+    this.happiness.title = L(`${s.happiness}% of residents are happy`, `${s.happiness} % des habitants sont heureux`);
     this.happiness.classList.toggle('neg', s.happiness < 50);
     const fraction = next ? Math.max(0, Math.min(1, (s.pop - milestone.population) / (next.population - milestone.population))) : 1;
     this.cityFill.style.width = `${fraction * 100}%`;
-    this.cityNext.textContent = next ? `${fmt(s.pop)} / ${fmt(next.population)} residents → ${next.name} · +$${fmt(next.reward)}` : `${fmt(s.pop)} residents · All milestones achieved`;
+    this.cityNext.textContent = next ? L(`${fmt(s.pop)} / ${fmt(next.population)} residents → ${next.name} · +$${fmt(next.reward)}`, `${fmt(s.pop)} / ${fmt(next.population)} habitants → ${milestoneName(s.cityLevel + 1, next.name)} · +${fmt(next.reward)} $`) : L(`${fmt(s.pop)} residents · All milestones achieved`, `${fmt(s.pop)} habitants · Tous les paliers sont atteints`);
     for (const [key, value] of this.civicMeters) {
       value.textContent = `${s.civic[key]}%`;
       value.classList.toggle('neg', s.civic[key] < 35);
     }
     this.milestoneRows.forEach((row, i) => { row.classList.toggle('earned', i <= s.cityLevel); row.classList.toggle('next', i === s.cityLevel + 1); });
-    this.transportStats.textContent = `${s.entries} city entrances · ${s.transport.busLines} bus routes · ${s.transport.trolleyLines ?? 0} trolley routes · ${s.transport.railLines} rail lines · ${s.transport.intercityLines} intercity lines · ${s.transport.subwayLines ?? 0} metro links · ${s.transport.airports} airports · ${s.transport.taxiStops ?? 0} taxi stops · ${s.transport.taxiRiders ?? 0} taxi riders/min · ${s.transport.riders} transit riders/min · ${s.transport.airPassengers} air passengers/min · ${s.transport.railPassengers} intercity rail passengers/min · fares $${s.transport.fareIncome.toFixed(2)}/s`;
-    this.incidentStats.textContent = `${s.incidents.patrols} police cars · ${s.incidents.fireEngines} fire engines · ${s.incidents.extinguished} fires extinguished · ${s.incidents.prevented} crimes prevented · ${s.incidents.foiled} robberies foiled · ${s.incidents.robbed} got away`;
-    this.treatmentStats.textContent = `${s.treatedSewage} sewage units filtered`;
+    this.transportStats.textContent = L(`${s.entries} city entrances · ${s.transport.busLines} bus routes · ${s.transport.trolleyLines ?? 0} trolley routes · ${s.transport.railLines} rail lines · ${s.transport.intercityLines} intercity lines · ${s.transport.subwayLines ?? 0} metro links · ${s.transport.airports} airports · ${s.transport.taxiStops ?? 0} taxi stops · ${s.transport.taxiRiders ?? 0} taxi riders/min · ${s.transport.riders} transit riders/min · ${s.transport.airPassengers} air passengers/min · ${s.transport.railPassengers} intercity rail passengers/min · fares $${s.transport.fareIncome.toFixed(2)}/s`, `${s.entries} entrées de ville · ${s.transport.busLines} lignes de bus · ${s.transport.trolleyLines ?? 0} lignes de trolleybus · ${s.transport.railLines} lignes ferroviaires · ${s.transport.intercityLines} lignes interurbaines · ${s.transport.subwayLines ?? 0} liaisons de métro · ${s.transport.airports} aéroports · ${s.transport.taxiStops ?? 0} stations de taxis · ${s.transport.taxiRiders ?? 0} passagers de taxi/min · ${s.transport.riders} voyageurs en transport/min · ${s.transport.airPassengers} passagers aériens/min · ${s.transport.railPassengers} passagers ferroviaires interurbains/min · recettes : ${s.transport.fareIncome.toFixed(2)} $/s`);
+    this.incidentStats.textContent = L(`${s.incidents.patrols} police cars · ${s.incidents.fireEngines} fire engines · ${s.incidents.extinguished} fires extinguished · ${s.incidents.prevented} crimes prevented · ${s.incidents.foiled} robberies foiled · ${s.incidents.robbed} got away`, `${s.incidents.patrols} voitures de police · ${s.incidents.fireEngines} véhicules de pompiers · ${s.incidents.extinguished} incendies éteints · ${s.incidents.prevented} délits évités · ${s.incidents.foiled} braquages déjoués · ${s.incidents.robbed} voleurs en fuite`);
+    this.treatmentStats.textContent = L(`${s.treatedSewage} sewage units filtered`, `${s.treatedSewage} unités d’eaux usées traitées`);
     for (const id of ['office', 'leisure', 'entry'] as Tool[]) {
       const button = this.toolBtns.get(id)!;
       const unlock = id === 'office' ? OFFICE_UNLOCK : id === 'leisure' ? LEISURE_UNLOCK : ENTRY_UNLOCK;

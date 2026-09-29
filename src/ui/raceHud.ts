@@ -2,6 +2,10 @@ import type { RaceHud, RaceResult } from '../racing/race';
 import type { RaceRoute } from '../racing/routes';
 import { RACE_KINDS } from '../racing/routes';
 import { ordinal } from './garage';
+import { getLang, raceKindText } from '../i18n';
+
+const L = (en: string, fr: string): string => getLang() === 'fr' ? fr : en;
+const place = (n: number): string => getLang() === 'fr' ? `${n}${n === 1 ? 're' : 'e'}` : ordinal(n);
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -31,7 +35,7 @@ export class RaceHudView {
   private progress = el('div', 'race-progress');
   private progressFill = el('span');
   private big = el('div', 'race-big');
-  private warn = el('div', 'race-warn', 'WRONG WAY');
+  private warn = el('div', 'race-warn', L('WRONG WAY', 'MAUVAIS SENS'));
   private meter = el('div', 'race-meter');
   private meterFill = el('span');
   private prompt = el('div', 'race-prompt');
@@ -42,7 +46,7 @@ export class RaceHudView {
   constructor(parent: HTMLElement, actions: RaceHudActions) {
     this.actions = actions;
     this.progress.append(this.progressFill);
-    this.meter.append(el('span', 'label', 'Police'), this.meterFill);
+    this.meter.append(el('span', 'label', L('Police', 'Police')), this.meterFill);
     this.bar.append(this.name, this.stats, this.progress, this.meter);
     this.root.append(this.bar, this.big, this.warn, this.prompt, this.results);
     parent.append(this.root);
@@ -57,13 +61,13 @@ export class RaceHudView {
     this.bar.hidden = !hud;
     this.warn.hidden = !hud || hud.phase !== 'racing' || !(hud.wrongWay || hud.offRoute);
     if (hud) {
-      this.warn.textContent = hud.wrongWay ? '⟲ WRONG WAY' : 'Back to the route · R resets';
+      this.warn.textContent = hud.wrongWay ? L('⟲ WRONG WAY', '⟲ MAUVAIS SENS') : L('Back to the route · R resets', 'Reprenez le parcours · R pour recommencer');
       this.name.textContent = hud.name;
       this.name.style.borderColor = hex(RACE_KINDS[hud.kind].color);
       const parts: string[] = [];
       if (hud.kind === 'drift') parts.push(`${hud.score.toLocaleString('en-US')} / ${hud.target.toLocaleString('en-US')} pts`, `×${hud.combo}`);
-      else if (hud.kind !== 'police') parts.push(`${ordinal(hud.place)} of ${hud.racers}`);
-      if (hud.laps > 1) parts.push(`Lap ${hud.lap}/${hud.laps}`);
+      else if (hud.kind !== 'police') parts.push(L(`${ordinal(hud.place)} of ${hud.racers}`, `${place(hud.place)} sur ${hud.racers}`));
+      if (hud.laps > 1) parts.push(L(`Lap ${hud.lap}/${hud.laps}`, `Tour ${hud.lap}/${hud.laps}`));
       parts.push(clock(hud.time));
       const text = parts.join('   ');
       if (this.stats.textContent !== text) this.stats.textContent = text;
@@ -71,12 +75,13 @@ export class RaceHudView {
       this.meter.hidden = hud.kind !== 'police';
       this.meterFill.style.width = `${Math.round(hud.busted * 100)}%`;
       let big = '';
-      if (hud.phase === 'countdown') big = hud.countdown > 0 ? String(Math.ceil(hud.countdown)) : 'GO!';
-      else if (hud.messageTime > 0) big = hud.message;
+      if (hud.phase === 'countdown') big = hud.countdown > 0 ? String(Math.ceil(hud.countdown)) : L('GO!', 'PARTEZ !');
+      else if (hud.messageTime > 0) big = getLang() === 'fr' && hud.message === 'Wrong way!' ? 'Mauvais sens !' : hud.message;
       if (this.big.textContent !== big) this.big.textContent = big;
       this.big.classList.toggle('count', hud.phase === 'countdown');
     } else if (this.big.textContent) this.big.textContent = '';
-    const promptText = !hud && nearby ? `${RACE_KINDS[nearby.kind].label}: ${nearby.name} — press Enter to race` : '';
+    const nearbyKind = nearby ? raceKindText(nearby.kind, RACE_KINDS[nearby.kind]).label : '';
+    const promptText = !hud && nearby ? L(`${nearbyKind}: ${nearby.name} — press Enter to race`, `${nearbyKind} : ${nearby.name} — appuyez sur Entrée pour courir`) : '';
     if (promptText !== this.shown) {
       this.shown = promptText;
       this.prompt.textContent = promptText;
@@ -87,24 +92,25 @@ export class RaceHudView {
   /** The end of a race: how it went, what it paid, and where to go next. */
   showResult(r: RaceResult, cash: number): void {
     this.results.textContent = '';
-    const kind = RACE_KINDS[r.race.kind];
-    const head = r.race.kind === 'police' ? (r.busted ? 'Busted!' : 'Got away!')
-      : r.race.kind === 'drift' ? (r.medal ? `${r.medal} medal` : 'Not enough points')
-      : r.won ? 'You win!' : `${ordinal(r.place)} place`;
+    const kind = raceKindText(r.race.kind, RACE_KINDS[r.race.kind]);
+    const medal = r.medal ? L(`${r.medal} medal`, `Médaille ${r.medal === 'Gold' ? 'd’or' : r.medal === 'Silver' ? 'd’argent' : 'de bronze'}`) : '';
+    const head = r.race.kind === 'police' ? (r.busted ? L('Busted!', 'Arrêté !') : L('Got away!', 'Échappé !'))
+      : r.race.kind === 'drift' ? (r.medal ? medal : L('Not enough points', 'Pas assez de points'))
+      : r.won ? L('You win!', 'Vous avez gagné !') : L(`${ordinal(r.place)} place`, `${place(r.place)} place`);
     const title = el('h2', undefined, head);
     title.style.color = r.share > 0 ? '#ffd166' : '#ff8a8a';
     const lines = [
       `${kind.label} · ${r.race.name}`,
-      r.race.kind === 'drift' ? `${r.score.toLocaleString('en-US')} points (target ${r.race.target.toLocaleString('en-US')})` : `Time ${clock(r.time)}`,
-      r.reward > 0 ? `+$${r.reward.toLocaleString('en-US')} winnings · $${Math.round(cash).toLocaleString('en-US')} to spend in the garage` : 'No prize this time',
+      r.race.kind === 'drift' ? L(`${r.score.toLocaleString('en-US')} points (target ${r.race.target.toLocaleString('en-US')})`, `${r.score.toLocaleString('fr-FR')} points (objectif : ${r.race.target.toLocaleString('fr-FR')})`) : `${L('Time', 'Temps')} ${clock(r.time)}`,
+      r.reward > 0 ? L(`+$${r.reward.toLocaleString('en-US')} winnings · $${Math.round(cash).toLocaleString('en-US')} to spend in the garage`, `+${r.reward.toLocaleString('fr-FR')} $ de gains · ${Math.round(cash).toLocaleString('fr-FR')} $ à dépenser au garage`) : L('No prize this time', 'Pas de récompense cette fois'),
     ];
     this.results.append(title, ...lines.map(t => el('p', undefined, t)));
     const row = el('div', 'race-buttons');
-    const again = el('button', 'garage-go', 'Race again');
+    const again = el('button', 'garage-go', L('Race again', 'Rejouer'));
     again.addEventListener('click', () => { this.hideResult(); this.actions.again(r.race); });
-    const garage = el('button', 'garage-buy', 'Garage');
+    const garage = el('button', 'garage-buy', L('Garage', 'Garage'));
     garage.addEventListener('click', () => { this.hideResult(); this.actions.garage(); });
-    const drive = el('button', 'garage-buy', 'Keep driving');
+    const drive = el('button', 'garage-buy', L('Keep driving', 'Continuer à conduire'));
     drive.addEventListener('click', () => { this.hideResult(); this.actions.drive(); });
     row.append(again, garage, drive);
     this.results.append(row);

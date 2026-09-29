@@ -1,7 +1,7 @@
 import { defaultExtras } from './extras';
 import { highwayLayout, HIGHWAY_END } from './game';
 import {
-  GRID, N_TILES, idx, inBounds, SERVICES,
+  GRID, LEGACY_GRID, N_TILES, idx, inBounds, SERVICES,
   T_RES, T_COM, T_IND, T_OFFICE, T_LEISURE, T_FARM, T_PARK, T_CLINIC, T_SCHOOL, T_FIRE, T_POLICE, T_RECYCLING, T_UNIVERSITY,
   T_COAL, T_WIND, T_SOLAR, T_GAS, T_PUMP, T_TOWER, T_OUTLET, T_TREATMENT, T_BUS, T_STATION, T_SUBWAY, T_AIRPORT, T_TAXI,
   T_PLAYGROUND, T_SPORTS, T_GARDEN, T_HOSPITAL, T_CITY_HOSPITAL, T_POLICE_HQ, T_CEMETERY, T_CREMATORIUM, T_POST_OFFICE,
@@ -15,8 +15,10 @@ import { newCity } from './game';
 import type { SaveData } from './save';
 
 const DEMO_SEED = 214;
+const OFFSET = (GRID - LEGACY_GRID) / 2;
 
 type Pt = { x: number; z: number };
+const worldPoint = (p: Pt): Pt => ({ x: p.x + OFFSET, z: p.z + OFFSET });
 
 /**
  * A prebuilt city that fills the whole map of the demo seed. The two-lane highway comes in at the top
@@ -71,27 +73,29 @@ export function demoCity(expanded = false): SaveData {
   const street = (points: Pt[], kind = KIND_ROAD): void => {
     // Sample straight runs finely enough that a crossing of the river is found and cut out.
     const fine: Pt[] = [];
-    points.map(clamp).forEach((p, i, all) => {
+    points.map(worldPoint).map(clamp).forEach((p, i, all) => {
       if (i === 0) { fine.push(p); return; }
       const q = all[i - 1], n = Math.max(1, Math.round(Math.hypot(p.x - q.x, p.z - q.z) / 3));
       for (let k = 1; k <= n; k++) fine.push({ x: q.x + (p.x - q.x) * k / n, z: q.z + (p.z - q.z) * k / n });
     });
     for (const run of dryRuns(fine)) {
       // Keep the path's own corners, drop the in-between samples on straight stretches.
-      const kept = run.filter((p, k) => k === 0 || k === run.length - 1 || points.some(g => Math.hypot(g.x - p.x, g.z - p.z) < 0.01) || k % 4 === 0);
+      const kept = run.filter((p, k) => k === 0 || k === run.length - 1 || points.some(g => { const w = worldPoint(g); return Math.hypot(w.x - p.x, w.z - p.z) < 0.01; }) || k % 4 === 0);
       net.insertPath(kept, kind);
     }
   };
   const bridge = (from: Pt, to: Pt, kind = KIND_ROAD): void => {
-    if (!dry(from.x, from.z) || !dry(to.x, to.z)) return;
-    net.insertPath([from, to], kind, false, 1);
+    const a = worldPoint(from), b = worldPoint(to);
+    if (!dry(a.x, a.z) || !dry(b.x, b.z)) return;
+    net.insertPath([a, b], kind, false, 1);
   };
 
   // The way in: both carriageways of the crossing highway curve into the western avenue.
   const layout = highwayLayout(terrain);
   const inX = layout.x1, outX = layout.x2;
-  const gate: Pt = { x: 18.5, z: HIGHWAY_END + 5 };
-  for (const x of [inX, outX]) net.insertPath([{ x, z: HIGHWAY_END }, { x, z: HIGHWAY_END + 2.5 }, gate], KIND_ROAD);
+  const gate: Pt = { x: 18.5, z: HIGHWAY_END - OFFSET + 5 };
+  const gateWorld = worldPoint(gate);
+  for (const x of [inX, outX]) net.insertPath([{ x, z: HIGHWAY_END }, { x, z: HIGHWAY_END + 2.5 }, gateWorld], KIND_ROAD);
 
   // North bank: the grid.
   const W = 6.5, E = 74.5;
@@ -114,6 +118,7 @@ export function demoCity(expanded = false): SaveData {
 
   // Riverside drives on both banks, a little way back from the water.
   const bankDrive = (towards: Pt, from: number, to: number, skip: (p: Pt) => boolean = () => false): void => {
+    const target = worldPoint(towards);
     let pts: Pt[] = [];
     const runs: Pt[][] = [];
     for (let j = from; j <= to; j += 3) {
@@ -122,9 +127,9 @@ export function demoCity(expanded = false): SaveData {
       let nx = -(b.z - a.z), nz = b.x - a.x;
       const l = Math.hypot(nx, nz) || 1;
       nx /= l; nz /= l;
-      if ((towards.x - a.x) * nx + (towards.z - a.z) * nz < 0) { nx = -nx; nz = -nz; }
+      if ((target.x - a.x) * nx + (target.z - a.z) * nz < 0) { nx = -nx; nz = -nz; }
       const p = { x: Math.floor(a.x + nx * (a.w + 2.7)) + 0.5, z: Math.floor(a.z + nz * (a.w + 2.7)) + 0.5 };
-      if (skip(p)) { runs.push(pts); pts = []; continue; }
+      if (p.x < OFFSET || p.z < OFFSET || p.x >= OFFSET + LEGACY_GRID || p.z >= OFFSET + LEGACY_GRID || skip({ x: p.x - OFFSET, z: p.z - OFFSET })) { runs.push(pts); pts = []; continue; }
       if (!pts.length || Math.hypot(p.x - pts.at(-1)!.x, p.z - pts.at(-1)!.z) > 1.2) pts.push(p);
     }
     runs.push(pts);
@@ -153,10 +158,11 @@ export function demoCity(expanded = false): SaveData {
   for (const x of [8.5, 12.5, 24.5, 30.5, 36.5, 48.5, 54.5, 60.5, 66.5, 72.5]) street([{ x, z: 58.5 }, { x, z: x > 56 ? 70.5 : 77.5 }]);
 
   // Traffic control: roundabouts at the two centres, lights where avenues cross.
-  net.addRoundabout(42.5, 24.5, ROUNDABOUT_RADIUS[KIND_AVENUE], KIND_AVENUE);
-  net.addRoundabout(42.5, 70.5, ROUNDABOUT_RADIUS[KIND_AVENUE], KIND_AVENUE);
+  net.addRoundabout(...[worldPoint({ x: 42.5, z: 24.5 }).x, worldPoint({ x: 42.5, z: 24.5 }).z, ROUNDABOUT_RADIUS[KIND_AVENUE], KIND_AVENUE] as [number, number, number, number]);
+  net.addRoundabout(...[worldPoint({ x: 42.5, z: 70.5 }).x, worldPoint({ x: 42.5, z: 70.5 }).z, ROUNDABOUT_RADIUS[KIND_AVENUE], KIND_AVENUE] as [number, number, number, number]);
   for (const [x, z] of [[18.5, 12.5], [18.5, 24.5], [42.5, 12.5], [18.5, 70.5], [30.5, 24.5], [54.5, 24.5], [42.5, 36.5], [42.5, 18.5]]) {
-    const node = net.nearestNode(x, z, 1.0);
+    const p = worldPoint({ x, z });
+    const node = net.nearestNode(p.x, p.z, 1.0);
     if (node && net.degree(node.id) >= 3 && !node.ring) node.light = true;
   }
 
@@ -186,11 +192,11 @@ export function demoCity(expanded = false): SaveData {
   const free = (i: number, bank = false): boolean => !water[i] && (bank || !terrain.shore[i]) && !ras.cover[i] && ras.accSeg[i] >= 0;
   const hash = (i: number): number => ((i * 2654435761) >>> 0) % 100;
   for (let i = 0; i < N_TILES; i++) {
-    if (!free(i)) continue;
-    const x = i % GRID + 0.5, z = Math.floor(i / GRID) + 0.5;
+    const x = i % GRID + 0.5 - OFFSET, z = Math.floor(i / GRID) + 0.5 - OFFSET;
+    if (x < 0 || z < 0 || x >= LEGACY_GRID || z >= LEGACY_GRID || !free(i)) continue;
     const peninsula = x > 30 && x < 52 && z > 49 && z < 64;
     const south = z > 58 && !peninsula;
-    const nearRiver = (() => { for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) { const tx = Math.floor(x) + dx, tz = Math.floor(z) + dz; if (inBounds(tx, tz) && water[idx(tx, tz)]) return true; } return false; })();
+    const nearRiver = (() => { for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) { const tx = Math.floor(x) + dx + OFFSET, tz = Math.floor(z) + dz + OFFSET; if (inBounds(tx, tz) && water[idx(tx, tz)]) return true; } return false; })();
     // Shops line the avenues, a block deep on each side.
     const onAvenue = Math.abs(z - 12.5) < 3.2 || Math.abs(z - 24.5) < 3.2 || Math.abs(x - 42.5) < 3.2 || Math.abs(x - 18.5) < 3.2 && z > 10 || Math.abs(z - 70.5) < 3.2;
     let k: number;
@@ -211,23 +217,25 @@ export function demoCity(expanded = false): SaveData {
 
   // ---- services and utilities ----------------------------------------------------------------------
   const place = (near: Pt, k: number, ok: (i: number, x: number, z: number) => boolean = () => true, bank = false): boolean => {
+    near = worldPoint(near);
     // Never inside the lot of a large building placed earlier.
     const owners = siteOwners(kind);
     for (let r = 0; r < 10; r++) {
       for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx++) {
         if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
         const x = Math.floor(near.x) + dx, z = Math.floor(near.z) + dz;
-        if (!inBounds(x, z)) continue;
+        if (!inBounds(x, z) || x < OFFSET || z < OFFSET || x >= OFFSET + LEGACY_GRID || z >= OFFSET + LEGACY_GRID) continue;
         const i = idx(x, z);
         if (free(i, bank) && kind[i] < T_COAL && owners[i] < 0 && ok(i, x, z)) { kind[i] = k; return true; }
       }
     }
     return false;
   };
-  const placeLarge = (near: Pt, k: number): boolean => {
+  const placeLarge = (near: Pt, k: number, radius = 14): boolean => {
+    near = worldPoint(near);
     const owners = siteOwners(kind);
     const choices = Array.from({ length: N_TILES }, (_, i) => i)
-      .filter(i => Math.hypot(i % GRID - near.x, Math.floor(i / GRID) - near.z) < 14)
+      .filter(i => Math.hypot(i % GRID - near.x, Math.floor(i / GRID) - near.z) < radius)
       .sort((a, b) => Math.hypot(a % GRID - near.x, Math.floor(a / GRID) - near.z) - Math.hypot(b % GRID - near.x, Math.floor(b / GRID) - near.z));
     for (const i of choices) {
       const cells = footprint(i, k);
@@ -250,6 +258,7 @@ export function demoCity(expanded = false): SaveData {
   const bankTiles: { i: number; f: number }[] = [];
   for (let i = 0; i < N_TILES; i++) {
     const x = i % GRID, z = Math.floor(i / GRID);
+    if (x < OFFSET || z < OFFSET || x >= OFFSET + LEGACY_GRID || z >= OFFSET + LEGACY_GRID) continue;
     if (free(i, true) && touchesWater(terrain, x, z)) bankTiles.push({ i, f: adjacentFlow(terrain, x, z) });
   }
   bankTiles.sort((a, b) => a.f - b.f);
@@ -282,7 +291,7 @@ export function demoCity(expanded = false): SaveData {
   for (const p of [{ x: 60, z: 28 }, { x: 62, z: 60 }, { x: 8, z: 22 }, { x: 30, z: 46 }, { x: 14, z: 74 }, { x: 36, z: 8 }]) place(p, T_RECYCLING);
   for (const p of [{ x: 20, z: 20 }, { x: 58, z: 44 }, { x: 4, z: 58 }]) place(p, T_FIRE);
   // A lattice of the services every street needs within reach, so no neighbourhood falls between districts.
-  for (let z = 8; z < GRID; z += 14) for (let x = 8; x < GRID; x += 14) {
+  for (let z = 8; z < LEGACY_GRID; z += 14) for (let x = 8; x < LEGACY_GRID; x += 14) {
     place({ x, z }, T_FIRE); place({ x: x + 3, z }, T_POLICE);
     place({ x: x + 6, z: z + 3 }, T_CLINIC); place({ x: x + 3, z: z + 6 }, T_SCHOOL); place({ x: x + 7, z: z + 7 }, T_SCHOOL);
     if ((x + z) % 28 === 16) place({ x, z: z + 3 }, T_RECYCLING);
@@ -304,7 +313,7 @@ export function demoCity(expanded = false): SaveData {
     placeLarge({ x: 8, z: 46 }, T_CEMETERY); placeLarge({ x: 70, z: 48 }, T_CEMETERY);
     place({ x: 76, z: 20 }, T_CREMATORIUM); place({ x: 4, z: 76 }, T_CREMATORIUM);
     for (const p of [{ x: 46, z: 20 }, { x: 38, z: 74 }, { x: 14, z: 30 }, { x: 62, z: 38 }, { x: 26, z: 10 }, { x: 10, z: 62 }, { x: 68, z: 62 }]) place(p, T_POST_OFFICE);
-    for (let z = 10; z < GRID; z += 18) for (let x = 12; x < GRID; x += 20) { place({ x, z }, T_POST_OFFICE); place({ x: x + 4, z: z + 4 }, T_CREMATORIUM); }
+    for (let z = 10; z < LEGACY_GRID; z += 18) for (let x = 12; x < LEGACY_GRID; x += 20) { place({ x, z }, T_POST_OFFICE); place({ x: x + 4, z: z + 4 }, T_CREMATORIUM); }
     placeLarge({ x: 58, z: 16 }, T_NUCLEAR);
     placeLarge({ x: 12, z: 60 }, T_UNIVERSITY);
     // A railway: one station by the highway's gate so trains run out of town, one downtown, one south.
@@ -315,7 +324,7 @@ export function demoCity(expanded = false): SaveData {
     for (let z = 10; z <= 46; z += 9) for (let x = 8; x <= 72; x += 12) place({ x, z }, T_BUS);
     for (const x of [8, 26, 50, 68]) place({ x, z: 67 }, T_BUS);
     for (const p of [{ x: 40, z: 27 }, { x: 44, z: 72 }]) place(p, T_TAXI);
-    placeLarge({ x: 62, z: 72 }, T_AIRPORT);
+    placeLarge({ x: 62, z: 72 }, T_AIRPORT, 30);
     // Fishing docks on the southern bank, downstream of nothing dirty.
     place({ x: 22, z: 60 }, T_DOCKS, (_i, x, z) => touchesWater(terrain, x, z), true);
   }

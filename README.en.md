@@ -263,15 +263,15 @@ fix them. Keep the lights on, the water clean, and the factories away from the h
 
 ## City progression and neighborhood services
 
-Grow from Settlement to Metropolis through seven permanent city levels, at 0, 120, 400,
-900, 1,800, 3,500 and 6,500 residents. Each new milestone grants money once and unlocks
+Grow from Settlement to World city through nine permanent city levels, at 0, 120, 400,
+900, 1,800, 3,500, 6,500, 10,000 and 15,000 residents. Each new milestone grants money once and unlocks
 services. The level chip in the top-left corner carries your level and happiness; click it for the
 roadmap and live service coverage.
 
-Eight new buildings have distinct models and ongoing costs: neighborhood parks, medical
-clinics, elementary schools, fire stations, police stations, recycling centers, universities,
-and solar farms. The Services menu shows capacity, range and unlock requirements; the green
-ring previews the area served before placement. Solar farms are in Electricity.
+Forty-seven buildings have distinct models and ongoing costs, from the wind turbine to the nuclear
+plant, through hospitals, schools, fire stations, recycling centers and stations. The Services menu
+shows capacity, range and unlock requirements; the green ring previews the area served before
+placement. Solar farms are in Electricity.
 
 Services share their capacity among nearby residents, and both ends must connect to the
 highway. Coverage, pollution, utilities, taxes and commuting influence happiness and housing
@@ -389,6 +389,15 @@ it takes. Larger sites keep to the grid, and back lanes only run behind rows squ
 
 The city autosaves in your browser, and **Share** copies a link that contains the whole city.
 
+## Multiplayer co-op
+
+Build the same city together, live: the **Multiplayer** button (group icon, top right) opens the co-op panel.
+
+- **Host**: click it, copy the invite code and send it to your friends (one code per guest). Then paste their answer to let them in.
+- **Join**: paste the host's code, then send your answer back.
+- The host runs the simulation and shares money and growth; everyone builds with their own tools, sees the other mayors' coloured rings, and coordinates over chat. Only the host can undo (Ctrl+Z).
+- A direct browser-to-browser link (WebRTC, no server or account): if connecting fails, reload on both sides; strict networks may block it. If the host leaves, everyone keeps a copy of the city.
+
 ## How it works
 
 - Vite + TypeScript + [three.js](https://threejs.org/), no UI framework.
@@ -425,6 +434,7 @@ The city autosaves in your browser, and **Share** copies a link that contains th
 - **Landscape:** seeded hills surround a flat, buildable valley; mixed forests clear around roads and occupied lots. Rivers have irregular banks, moving ripples, rocks and an upstream waterfall with spray. Highway entrances cut clear corridors through the hills. Existing saves retain their river and buildable grid.
 - **Save format:** v7 header with the seed and earned city level, RLE tiles, then the road network at 5 bytes per node and 9 per
   segment (including bridge/tunnel flags), followed by a length-prefixed incident snapshot; base64url-encoded into `#c=...`.
+- **Multiplayer** (`src/multiplayer/`): WebRTC star around the host, manual signalling with copy-paste codes (no server). The host applies guests' maps (`Game.exportAuthority` / `applyAuthority`) and rebroadcasts the encoded full city; cursors and chat ride the same channel.
 
 ## Develop
 
@@ -442,8 +452,11 @@ the workflow in `.github/workflows/deploy.yml`.
 
 ## Not in it
 
-Individual citizens (people and trips are counted, not simulated one by one), a map bigger than 80 × 80
-cells, and terraforming of the hills: they stay scenic, and the building grid stays level.
+Individual citizens: people and trips are counted, not simulated one by one. The map is 160 × 160
+cells, open at 80 × 80 to begin with and bought afterwards in 20 × 20 parcels ($8,000, then $2,500 more
+per parcel). The ground is yours to shape everywhere on the grid: lowering, raising and flattening
+raise mounds and dig lagoons, and steep slopes block roads and buildings. There is no victory screen
+either: the city is played up to World city, at 15,000 residents.
 
 MIT license.
 

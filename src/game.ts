@@ -12,8 +12,9 @@ import { noPolicies } from './policies';
 import type { PolicyId } from './policies';
 import type { FundingKey } from './management';
 import { levelForPopulation } from './progression';
-import { RES_POP, T_RES, GRID, MAX_CARS, N_TILES, START_MONEY, isService, isZone } from './constants';
+import { EXPANSION_SIDE, EXPANSION_SIZE, RES_POP, START_AREA_SIZE, T_RES, GRID, MAX_CARS, N_TILES, START_MONEY, isService, isZone } from './constants';
 import { Network, KIND_MOTORWAY, KIND_RAMP, KIND_HIGHWAY2 } from './roads/network';
+import type { PlainNet } from './roads/network';
 import { ensureApproaches } from './roads/entries';
 import { rasterize } from './roads/raster';
 import type { Raster } from './roads/raster';
@@ -32,6 +33,15 @@ import type { DisasterKind, DisasterView } from './sim/disasters';
 /** One step of undo: the city as it was before an edit, and what that edit cost. */
 interface UndoStep { before: SaveData; spent: number }
 const UNDO_LIMIT = 30;
+
+/** Co-op multiplayer map: everything a player draws, without simulation output. */
+export interface AuthorityMap {
+  kind: Uint8Array;
+  rot: Uint8Array;
+  net: PlainNet;
+  extras: CityExtras;
+  parkPaths: ParkPath[];
+}
 
 const CHEAT_FLOOR = 1_000_000;
 
@@ -171,9 +181,69 @@ export class Game {
    * a pump or an outlet belongs on the bank.
    */
   buildable(i: number, bank = false): boolean {
+    if (!this.isTileUnlocked(i)) return false;
     if (this.parkPathLotMask[i] || hillLevel(this.extras.terraform[i]) > 0) return false;
     if (this.airportClearance[i] || this.terrain.water[i] || this.flooded[i] || this.raster.cover[i] || this.owners[i] >= 0) return false;
     return bank || !this.terrain.shore[i];
+  }
+
+  isTileUnlocked(i: number): boolean {
+    if (!Number.isInteger(i) || i < 0 || i >= N_TILES) return false;
+    const x = i % GRID, z = Math.floor(i / GRID);
+    return !!this.extras.expansions[Math.floor(z / EXPANSION_SIZE) * EXPANSION_SIDE + Math.floor(x / EXPANSION_SIZE)];
+  }
+
+  isWorldPointUnlocked(x: number, z: number): boolean {
+    const tx = Math.floor(x), tz = Math.floor(z);
+    if (tx < 0 || tz < 0 || tx >= GRID || tz >= GRID) return false;
+    return this.isTileUnlocked(tz * GRID + tx);
+  }
+
+  isWorldPathUnlocked(points: { x: number; z: number }[]): boolean {
+    for (let i = 0; i < points.length; i++) {
+      if (i === 0 && !this.isWorldPointUnlocked(points[i].x, points[i].z)) return false;
+      if (i === 0) continue;
+      const a = points[i - 1], b = points[i], steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 0.25));
+      for (let step = 0; step <= steps; step++) {
+        const t = step / steps;
+        if (!this.isWorldPointUnlocked(a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t)) return false;
+      }
+    }
+    return true;
+  }
+
+  isWorldAreaUnlocked(x: number, z: number, radius: number): boolean {
+    for (let tz = Math.floor(z - radius); tz <= Math.floor(z + radius); tz++) {
+      for (let tx = Math.floor(x - radius); tx <= Math.floor(x + radius); tx++) {
+        if (tx < 0 || tz < 0 || tx >= GRID || tz >= GRID) return false;
+        if (Math.hypot(tx + 0.5 - x, tz + 0.5 - z) <= radius && !this.isTileUnlocked(tz * GRID + tx)) return false;
+      }
+    }
+    return true;
+  }
+
+  expansionCost(): number {
+    const opened = this.extras.expansions.reduce((sum, value) => sum + value, 0);
+    const initial = (START_AREA_SIZE / EXPANSION_SIZE) ** 2;
+    return 8000 + Math.max(0, opened - initial) * 2500;
+  }
+
+  canPurchaseExpansion(tileX: number, tileZ: number): boolean {
+    if (!Number.isInteger(tileX) || !Number.isInteger(tileZ) || tileX < 0 || tileZ < 0 || tileX >= EXPANSION_SIDE || tileZ >= EXPANSION_SIDE) return false;
+    if (this.stats.cityLevel < 1 || this.extras.expansions[tileZ * EXPANSION_SIDE + tileX]) return false;
+    const adjacent = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => {
+      const x = tileX + dx, z = tileZ + dz;
+      return x >= 0 && z >= 0 && x < EXPANSION_SIDE && z < EXPANSION_SIDE && !!this.extras.expansions[z * EXPANSION_SIDE + x];
+    });
+    return adjacent && this.canAfford(this.expansionCost());
+  }
+
+  purchaseExpansion(tileX: number, tileZ: number): boolean {
+    if (!this.canPurchaseExpansion(tileX, tileZ)) return false;
+    this.extras.expansions[tileZ * EXPANSION_SIDE + tileX] = 1;
+    this.spend(this.expansionCost());
+    this.flush();
+    return true;
   }
 
   parkPathProblem(paths: ParkPath[]): string | null {
@@ -190,6 +260,7 @@ export class Game {
       }
       for (const i of nearby) if ((isZone(this.kind[i]) || (isService(this.kind[i]) && !isDecoration(this.kind[i]) && !SERVICES[this.kind[i]].footprint)) && parkPathTouchesLot(path, this.raster.lotX[i], this.raster.lotZ[i])) return 'Keep paths clear of building fronts';
       for (const i of cells) {
+        if (!this.isTileUnlocked(i)) return 'Park paths must stay inside purchased parcels';
         if (this.kind[i] !== 0 && this.kind[i] !== T_PATH && this.kind[i] !== T_LAWN && this.kind[i] !== T_PLAZA) return 'Clear buildings and decorations from the path';
         if (this.terrain.water[i] || this.terrain.shore[i] || this.raster.cover[i] || this.airportClearance[i] || this.owners[i] >= 0) return 'Keep paths on clear, dry ground beside roads';
       }
@@ -237,6 +308,7 @@ export class Game {
   /** Change a tile's kind, optionally facing a given quarter turn. Returns false if unchanged. */
   setKind(i: number, k: number, cost: number, rot = 0): boolean {
     if (!Number.isInteger(i) || i < 0 || i >= N_TILES) return false;
+    if (k && !this.isTileUnlocked(i)) return false;
     if (k && !isDecoration(k) && this.parkPathLotMask[i]) return false;
     if (isDecoration(k) && !decorationPlacementAllowed(i, { kind: this.kind, water: this.terrain.water, shore: this.terrain.shore, cover: this.raster.cover, owners: this.owners, airportClearance: this.airportClearance })) return false;
     if (this.owners[i] >= 0) {
@@ -348,6 +420,58 @@ export class Game {
     return { ...s, kind: s.kind.slice(), level: s.level.slice(), rot: s.rot?.slice(), neglect: s.neglect?.slice() };
   }
 
+  /**
+   * Co-op multiplayer: the map as one player drew it (tiles, roads, ground and
+   * districts), without simulation output (levels, money, tick) which stays
+   * with the host. A guest sends this to the host; the host applies it.
+   */
+  exportAuthority(): AuthorityMap {
+    return {
+      kind: this.kind.slice(),
+      rot: this.rot.slice(),
+      net: this.net.toPlain(),
+      extras: cloneExtras(this.extras),
+      parkPaths: this.parkPaths.map((p) => ({ ...p })),
+    };
+  }
+
+  /**
+   * Co-op multiplayer: take a guest's map as the city's, charging the shared
+   * treasury. Returns false when the treasury cannot cover it or the data is
+   * not a city map at all; the city is untouched then.
+   */
+  applyAuthority(data: AuthorityMap, spent: number): boolean {
+    if (!(data.kind instanceof Uint8Array) || !(data.rot instanceof Uint8Array)) return false;
+    if (data.kind.length !== N_TILES || data.rot.length !== N_TILES) return false;
+    if (!data.net || !Array.isArray(data.net.nodes) || !Array.isArray(data.net.segs)) return false;
+    if (data.net.nodes.length > 20000 || data.net.segs.length > 20000) return false;
+    if (!Array.isArray(data.parkPaths) || data.parkPaths.length > 2000) return false;
+    if (!data.parkPaths.every((p) => p && ['ax', 'az', 'cx', 'cz', 'bx', 'bz'].every((k) => Number.isFinite((p as unknown as Record<string, unknown>)[k])))) return false;
+    if (!Number.isFinite(spent) || spent < 0 || spent > 10_000_000) return false;
+    if (spent > 0 && !this.canAfford(spent)) return false;
+    const districts = data.extras?.district, ground = data.extras?.terraform;
+    if (!(districts instanceof Uint8Array) || !(ground instanceof Uint8Array)) return false;
+    if (districts.length !== N_TILES || ground.length !== N_TILES) return false;
+    let net: Network;
+    try {
+      net = Network.fromPlain(data.net);
+    } catch {
+      return false;
+    }
+    this.kind.set(data.kind);
+    this.rot.set(data.rot);
+    this.net = net;
+    this.extras = cloneExtras(data.extras);
+    this.parkPaths = data.parkPaths.map((p) => ({ ...p }));
+    this.tax = this.extras.taxes[0];
+    if (spent) this.pendingSpent += spent;
+    this.dirty = true;
+    this.flush();
+    // The edit payload carries no taxes, so the worker would keep the old rates.
+    this.send({ type: 'taxes', taxes: [...this.extras.taxes] as Taxes });
+    return true;
+  }
+
   load(d: SaveData, keepHistory = false): void {
     if (!keepHistory) this.undoStack = [];
     this.extras = d.extras ? cloneExtras(d.extras) : defaultExtras(d.tax);
@@ -429,7 +553,7 @@ export class Game {
   /** Paint tiles into a district (0 clears them). Free, like zoning a colour on a map. */
   paintDistrict(tiles: number[], district: number): number {
     let changed = 0;
-    for (const t of tiles) if (t >= 0 && t < N_TILES && this.extras.district[t] !== district) { this.extras.district[t] = district; changed++; }
+    for (const t of tiles) if (t >= 0 && t < N_TILES && this.isTileUnlocked(t) && this.extras.district[t] !== district) { this.extras.district[t] = district; changed++; }
     if (changed) { this.dirty = true; this.flush(); }
     return changed;
   }
@@ -450,6 +574,7 @@ export class Game {
   terraform(tiles: number[], action: TerraformAction): { changed: number; broke: boolean } {
     let changed = 0, broke = false;
     for (const t of tiles) {
+      if (!this.isTileUnlocked(t)) continue;
       const step = terraformStep(this.baseTerrain, this.extras.terraform, t, action);
       if (!step) continue;
       // Nothing under a road or a building, except bringing the ground up to level beneath a bankside works.
@@ -528,8 +653,9 @@ export function highwayLayout(terrain: Terrain): HighwayLayout {
     ? { x: e.x + e.dx * inward, z: along }
     : { x: along, z: e.z + e.dz * inward };
   const front = e.dx ? e.z : e.x;
-  // Where the crossing highway comes onto the map: well away from the map's corners.
-  const cross = [30, 26, 22].flatMap(gap => [front + gap, front - gap]).find(at => at > 15.5 && at < GRID - 15.5);
+  // Keep the first crossing inside the starter area, away from its corners.
+  const starterMin = (GRID - START_AREA_SIZE) / 2, starterMax = starterMin + START_AREA_SIZE;
+  const cross = [30, 26, 22].flatMap(gap => [front + gap, front - gap]).find(at => at > starterMin + 15.5 && at < starterMax - 15.5);
   // Drive on the right: the inner carriageway runs the way that puts the city on its right-hand side.
   const alongX = e.dx === 0, ax = alongX ? 1 : 0, az = alongX ? 0 : 1;
   const d = (-az * e.dx + ax * e.dz) > 0 ? 1 : -1;
@@ -580,7 +706,7 @@ const MOTORWAY_REACH = 18;
 /** How far in from the map edge the city's first streets begin, just past the highway's ends. */
 export const DOOR = 8.5;
 /** Where the crossing highway's two carriageways stop, side by side, a little way onto the map: the city starts here. */
-export const HIGHWAY_END = 5.5;
+export const HIGHWAY_END = (GRID - START_AREA_SIZE) / 2 + 5.5;
 /** Where the crossing highway comes from, beyond the cloverleaf's far arcs. */
 const HIGHWAY_FAR = -30;
 

@@ -23,7 +23,7 @@ export type EditOp =
  */
 export interface EditPlan { net: Network; ids: number[]; cost: number; problem: string | null; lost: number }
 
-export type EditHost = Pick<Game, 'net' | 'terrain' | 'kind' | 'level' | 'raster' | 'hillMask' | 'canAfford' | 'spend' | 'flush'>;
+export type EditHost = Pick<Game, 'net' | 'terrain' | 'kind' | 'level' | 'raster' | 'hillMask' | 'isWorldPathUnlocked' | 'canAfford' | 'spend' | 'flush'>;
 
 const segCost = (s: RSeg): number => s.len * ROAD_COST[s.kind] * STRUCTURE_COST[s.structure ?? 0];
 
@@ -111,6 +111,7 @@ function shapeProblem(game: EditHost, net: Network, segs: RSeg[]): string | null
   for (const s of segs) {
     const a = net.nodes.get(s.a)!, b = net.nodes.get(s.b)!;
     const path = [{ x: a.x, z: a.z }, { x: s.cx, z: s.cz }, { x: b.x, z: b.z }];
+    if (!game.isWorldPathUnlocked(path)) return 'Roads must stay inside purchased parcels';
     if (isLegacySpan(s)) {
       const rest = Network.fromPlain(net.toPlain());
       rest.removeSeg(s.id);

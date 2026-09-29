@@ -16,7 +16,7 @@ const { parkPathTiles, PARK_PATH_HALF } = await import('../src/parkPaths.ts');
 const { encode, decode } = await import('../src/save.ts');
 const { T_PATH, T_BENCH, T_RES, GRID } = await import('../src/constants.ts');
 globalThis.Worker = class { postMessage() {} };
-const fresh = () => { const g = new Game(); g.terrain.water.fill(0); g.terrain.shore.fill(0); g.stats.money = 100000; g.flush(); return g; };
+const fresh = () => { const g = new Game(); g.terrain.water.fill(0); g.terrain.shore.fill(0); g.extras.expansions.fill(1); g.stats.money = 100000; g.flush(); return g; };
 const line = {ax:20.5,az:20.5,cx:22.5,cz:20.5,bx:24.5,bz:20.5};
 const curve = {ax:24.5,az:20.5,cx:27.5,cz:20.5,bx:27.5,bz:24.5};
 const g=fresh();

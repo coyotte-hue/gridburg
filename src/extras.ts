@@ -1,4 +1,4 @@
-import { GRID, N_TILES } from './constants';
+import { EXPANSION_SIDE, GRID, N_TILES, START_AREA_SIZE } from './constants';
 import type { Terrain } from './terrain';
 
 /**
@@ -65,20 +65,30 @@ export interface CityExtras {
   districtNames: string[];
   districtPolicies: number[];
   terraform: Uint8Array;
+  /** Purchased 20x20 map parcels, row-major. */
+  expansions: Uint8Array;
   disasters: boolean;
+}
+
+function initialExpansions(): Uint8Array {
+  const opened = new Uint8Array(EXPANSION_SIDE * EXPANSION_SIDE);
+  const first = (EXPANSION_SIDE - START_AREA_SIZE / 20) / 2;
+  const side = START_AREA_SIZE / 20;
+  for (let z = first; z < first + side; z++) for (let x = first; x < first + side; x++) opened[z * EXPANSION_SIDE + x] = 1;
+  return opened;
 }
 
 export function defaultExtras(tax = 10): CityExtras {
   return {
     taxes: [tax, tax, tax, tax], district: new Uint8Array(N_TILES), districtNames: [...DEFAULT_DISTRICT_NAMES],
-    districtPolicies: new Array(DISTRICT_COUNT).fill(0), terraform: new Uint8Array(N_TILES), disasters: true,
+    districtPolicies: new Array(DISTRICT_COUNT).fill(0), terraform: new Uint8Array(N_TILES), expansions: initialExpansions(), disasters: true,
   };
 }
 
 export function cloneExtras(e: CityExtras): CityExtras {
   return {
     taxes: [...e.taxes] as Taxes, district: e.district.slice(), districtNames: [...e.districtNames],
-    districtPolicies: [...e.districtPolicies], terraform: e.terraform.slice(), disasters: e.disasters,
+    districtPolicies: [...e.districtPolicies], terraform: e.terraform.slice(), expansions: e.expansions.slice(), disasters: e.disasters,
   };
 }
 
@@ -110,20 +120,24 @@ function unrle(pairs: unknown, max: number, length = N_TILES): Uint8Array | null
 export function extrasToJson(e: CityExtras): unknown {
   return {
     taxes: e.taxes, district: rle(e.district), names: e.districtNames, policies: e.districtPolicies,
-    terraform: rle(e.terraform), disasters: e.disasters,
+    terraform: rle(e.terraform), expansions: Array.from(e.expansions), disasters: e.disasters,
   };
 }
 
-export function extrasFromJson(data: unknown, tax: number): CityExtras | null {
+export function extrasFromJson(data: unknown, tax: number, length = N_TILES): CityExtras | null {
   if (!data || typeof data !== 'object') return null;
   const d = data as Record<string, unknown>;
   const e = defaultExtras(tax);
   const taxes = d.taxes;
   if (!Array.isArray(taxes) || taxes.length !== 4 || !taxes.every(t => Number.isInteger(t) && t >= 0 && t <= 30)) return null;
   e.taxes = taxes as Taxes;
-  const district = unrle(d.district, DISTRICT_COUNT), terraform = unrle(d.terraform, TERRAFORM_MAX);
+  const district = unrle(d.district, DISTRICT_COUNT, length), terraform = unrle(d.terraform, TERRAFORM_MAX, length);
   if (!district || !terraform) return null;
   e.district = district; e.terraform = terraform;
+  if (d.expansions !== undefined) {
+    if (!Array.isArray(d.expansions) || d.expansions.length !== EXPANSION_SIDE * EXPANSION_SIDE || !d.expansions.every(v => v === 0 || v === 1)) return null;
+    e.expansions = Uint8Array.from(d.expansions as number[]);
+  }
   if (!Array.isArray(d.names) || d.names.length !== DISTRICT_COUNT || !d.names.every(n => typeof n === 'string' && n.length <= 32)) return null;
   e.districtNames = d.names as string[];
   if (!Array.isArray(d.policies) || d.policies.length !== DISTRICT_COUNT || !d.policies.every(p => Number.isInteger(p) && p >= 0 && p < 1 << DISTRICT_POLICY_IDS.length)) return null;

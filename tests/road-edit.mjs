@@ -194,55 +194,63 @@ function city() {
   const game = new Game();
   game.terrain.water.fill(0); game.terrain.shore.fill(0);
   game.stats.money = 100000;
-  game.net.insertPath([{ x: 20, z: 30 }, { x: 30, z: 30 }], KIND_ROAD);
+  // Inside the parcels a new city owns: the map is 160x160 with only the middle 80x80 bought,
+  // and every edit here is refused for being outside them before the road itself is looked at.
+  game.net.insertPath([{ x: 45, z: 55 }, { x: 55, z: 55 }], KIND_ROAD);
   game.flush();
   return game;
 }
 
 test('a moved road is charged only for the road it adds, and can be undone', () => {
   const g = city();
-  const end = g.net.nearestNode(30, 30, 0.05);
-  const plan = planEdit(g, { type: 'move', node: end.id, x: 34, z: 30 });
+  const end = g.net.nearestNode(55, 55, 0.05);
+  const plan = planEdit(g, { type: 'move', node: end.id, x: 59, z: 55 });
   assert.equal(plan.problem, null);
   assert.equal(plan.cost, Math.round(4 * C.ROAD_COST[KIND_ROAD]));
   const money = g.stats.money;
   assert.ok(commitEdit(g, plan));
   assert.equal(g.stats.money, money - plan.cost);
-  assert.ok(g.net.nearestNode(34, 30, 0.05));
+  assert.ok(g.net.nearestNode(59, 55, 0.05));
   assert.ok(g.undo());
-  assert.ok(g.net.nearestNode(30, 30, 0.05), 'undo puts the node back');
+  assert.ok(g.net.nearestNode(55, 55, 0.05), 'undo puts the node back');
   assert.equal(g.stats.money, money);
 });
 
 test('a road dragged into the river is refused', () => {
   const g = city();
-  for (let x = 33; x < 36; x++) for (let z = 0; z < C.GRID; z++) g.terrain.water[z * C.GRID + x] = 1;
-  const end = g.net.nearestNode(30, 30, 0.05);
-  const plan = planEdit(g, { type: 'move', node: end.id, x: 38, z: 30 });
+  for (let x = 58; x < 61; x++) for (let z = 0; z < C.GRID; z++) g.terrain.water[z * C.GRID + x] = 1;
+  const end = g.net.nearestNode(55, 55, 0.05);
+  const plan = planEdit(g, { type: 'move', node: end.id, x: 63, z: 55 });
   assert.match(plan.problem, /river/);
   assert.equal(commitEdit(g, plan), false);
-  assert.ok(g.net.nearestNode(30, 30, 0.05));
+  assert.ok(g.net.nearestNode(55, 55, 0.05));
 });
 
 test('bending through a building counts it as paved over', () => {
   const g = city();
-  const house = 36 * C.GRID + 25;
+  const house = 61 * C.GRID + 50;
   g.setKind(house, C.T_RES, 0); g.level[house] = 1; g.flush();
   const seg = [...g.net.segs.values()][0];
-  const plan = planEdit(g, { type: 'bend', seg: seg.id, x: 25.5, z: 36.5 });
+  const plan = planEdit(g, { type: 'bend', seg: seg.id, x: 50.5, z: 61.5 });
   assert.equal(plan.problem, null);
   assert.equal(plan.lost, 1);
   const mid = plan.net.segs.get(plan.ids[0]);
-  assert.ok(Math.abs(mid.pts[(mid.n >> 1) * 2 + 1] - 36.5) < 0.05, 'the road passes through the pointer');
+  assert.ok(Math.abs(mid.pts[(mid.n >> 1) * 2 + 1] - 61.5) < 0.05, 'the road passes through the pointer');
 });
 
 test('a street bent through a bridge approach is refused', () => {
   const g = city();
-  g.net.insertPath([{ x: 40, z: 20 }, { x: 40, z: 40 }], KIND_ROAD, false, 1);
+  // Pick the street this file drew, not any road: the map's own motorway runs out past the
+  // purchased parcels, and bending that is refused for the parcels long before its ramps matter.
+  const street = [...g.net.segs.values()].find(s => !s.structure && !s.fixed && s.kind === KIND_ROAD
+    && g.net.nodes.get(s.a)?.x === 45 && g.net.nodes.get(s.a)?.z === 55);
+  assert.ok(street, 'the street is on the network');
+  g.net.insertPath([{ x: 67, z: 62 }, { x: 67, z: 82 }], KIND_ROAD, false, 1);
   g.flush();
-  const seg = [...g.net.segs.values()].find(s => !s.structure && !s.fixed && s.kind === KIND_ROAD);
   // Pull the street's middle across the bridge's southern ramp, where the deck is still low.
-  const plan = planEdit(g, { type: 'bend', seg: seg.id, x: 42, z: 21.5 });
+  // Bending puts the control point at 2 x pointer - (a + b) / 2, so this pointer has to keep that
+  // control point inside the purchased parcels as well as near the ramp.
+  const plan = planEdit(g, { type: 'bend', seg: street.id, x: 66.5, z: 62.5 });
   assert.match(plan.problem ?? '', /approach ramps|entrance/);
 });
 

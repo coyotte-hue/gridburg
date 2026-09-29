@@ -128,13 +128,15 @@ const { planEdit } = await import('../src/roadEdit.ts');
 test('editing decks and ramps checks them by their levels, not as old bridges', () => {
   const g = new Game();
   g.terrain.water.fill(0); g.terrain.shore.fill(0); g.stats.money = 1e6;
-  g.net.insertPath([{ x: 20, z: 30 }, { x: 25, z: 30 }], KIND_ROAD, false, 0, true, [1, 1]);
-  g.net.insertPath([{ x: 25, z: 30 }, { x: 35, z: 30 }], KIND_ROAD, false, 0, true, [1, 0]);
+  // Inside the parcels a new city owns: the map is 160x160 with only the middle 80x80 bought,
+  // and editing a road outside them is refused before its level is ever looked at.
+  g.net.insertPath([{ x: 45, z: 55 }, { x: 50, z: 55 }], KIND_ROAD, false, 0, true, [1, 1]);
+  g.net.insertPath([{ x: 50, z: 55 }, { x: 60, z: 55 }], KIND_ROAD, false, 0, true, [1, 0]);
   g.flush();
-  const end = g.net.nearestNode(20, 30, 0.05);
-  assert.equal(planEdit(g, { type: 'move', node: end.id, x: 19, z: 31 }).problem, null, 'a short deck can move');
-  const foot = g.net.nearestNode(35, 30, 0.05);
-  assert.match(planEdit(g, { type: 'move', node: foot.id, x: 27, z: 30 }).problem ?? '', /4 cells per level/);
+  const end = g.net.nearestNode(45, 55, 0.05);
+  assert.equal(planEdit(g, { type: 'move', node: end.id, x: 44, z: 56 }).problem, null, 'a short deck can move');
+  const foot = g.net.nearestNode(60, 55, 0.05);
+  assert.match(planEdit(g, { type: 'move', node: foot.id, x: 52, z: 55 }).problem ?? '', /4 cells per level/);
 });
 
 const { StructureLayer } = await import('../src/render/structures.ts');
@@ -145,7 +147,9 @@ function solidPoints(layer) {
     if (!o.isMesh || !o.geometry.attributes.position) return;
     o.updateMatrixWorld(true);
     const p = o.geometry.attributes.position, v = new (o.position.constructor)();
-    for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); out.push([v.x + 40, v.y, v.z + 40]); }
+    // The layer draws the map centred on its middle tile, so add that back to get map coordinates.
+    // This has to follow the grid: the map grew from 80x80 to 160x160 and the centre moved with it.
+    for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); out.push([v.x + C.GRID / 2, v.y, v.z + C.GRID / 2]); }
   });
   return out;
 }

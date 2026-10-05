@@ -1,6 +1,7 @@
 import { registerHooks } from 'node:module';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, extname, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 registerHooks({ resolve(specifier, context, nextResolve) {
   if (specifier.startsWith('.') && !/\.[a-z]+$/.test(specifier)) {
@@ -9,7 +10,10 @@ registerHooks({ resolve(specifier, context, nextResolve) {
   }
   return nextResolve(specifier, context);
 }});
-const SRC = new URL('../src/', import.meta.url).pathname.replace(/^\//, '');
+// fileURLToPath, not URL.pathname: pathname is a POSIX path on every platform, so reading it back
+// on Linux gives "/home/.../src/" -- and stripping the leading slash to suit a Windows drive letter
+// leaves a *relative* path, which then fails in readdirSync the moment CI runs on Linux.
+const SRC = fileURLToPath(new URL('../src/', import.meta.url));
 const { applyLang, getLang, t, inspectorName, translateInspectorText, translateUiMessage } = await import('../src/i18n.ts');
 
 let checks = 0;
